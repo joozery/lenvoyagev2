@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { authAPI } from "@/services/api"
 
 export function AdminHeader() {
     const router = useRouter()
@@ -53,6 +54,21 @@ export function AdminHeader() {
 
     const clearNotification = (id: number) => {
         setNotifications(notifications.filter(n => n.id !== id))
+    }
+
+    const handleLogout = async () => {
+        try {
+            await authAPI.logout();
+            // Clear cookie
+            document.cookie = "admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+            router.push("/admin/login");
+        } catch (error) {
+            console.error("Logout error:", error);
+            // Force logout even if API fails
+            document.cookie = "admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+            localStorage.removeItem('admin_token');
+            router.push("/admin/login");
+        }
     }
 
     const unreadCount = notifications.filter(n => n.unread).length
@@ -178,11 +194,7 @@ export function AdminHeader() {
                             <div className="p-2 border-t border-zinc-50">
                                 <button
                                     className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                                    onClick={() => {
-                                        // Clear cookie
-                                        document.cookie = "admin_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-                                        router.push("/admin/login");
-                                    }}
+                                    onClick={handleLogout}
                                 >
                                     <LogOut className="h-4 w-4" /> ออกจากระบบ
                                 </button>

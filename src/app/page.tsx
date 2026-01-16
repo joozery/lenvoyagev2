@@ -2,11 +2,45 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
+interface Tour {
+  _id: string;
+  name: string;
+  location: string;
+  price: number;
+  duration: string;
+  status: string;
+  image: {
+    url: string;
+  };
+  pdf?: {
+    url: string;
+  };
+}
+
 export default function Home() {
+  const [tours, setTours] = useState<Tour[]>([]);
+
+  useEffect(() => {
+    const fetchTours = async () => {
+      try {
+        const res = await fetch('/api/tours');
+        const data = await res.json();
+        if (data.success) {
+          setTours(data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch tours:', error);
+      }
+    };
+
+    fetchTours();
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -237,137 +271,90 @@ export default function Home() {
 
           {/* Tour Cards */}
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Card 1: Chengtu */}
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
-            >
-              <div className="relative h-64">
-                <Image
-                  src="/tour-chengtu.jpg"
-                  alt="Chengtu Tour"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  className="object-cover"
-                />
+            {tours.length === 0 ? (
+              // Loading Skeleton or Empty State
+              <div className="col-span-3 text-center py-20 text-gray-500">
+                กำลังโหลดข้อมูลการเดินทาง...
               </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Chengtu</h3>
-                <p className="text-gray-600 text-sm mb-4 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  จีนตอนใต้
-                </p>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    6 วัน 5 คืน
+            ) : (
+              tours.filter(tour => tour.status !== 'ร่าง').map((tour, index) => (
+                <motion.div
+                  key={tour._id}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full"
+                >
+                  <div className="relative h-64">
+                    <Image
+                      src={tour.image?.url || "/placeholder-tour.jpg"}
+                      alt={tour.name}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover"
+                    />
+                    {/* Status Badge */}
+                    {tour.status === "เร็วๆนี้" && (
+                      <div className="absolute top-4 right-4 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
+                        Coming Soon
+                      </div>
+                    )}
+                    {tour.status === "เต็มแล้ว" && (
+                      <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
+                        Sold Out
+                      </div>
+                    )}
                   </div>
-                  <div className="text-orange-500 font-bold text-lg">
-                    เหลือ X ฿
-                  </div>
-                </div>
-                <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-full transition-colors duration-300 font-medium">
-                  ดูทัวร์
-                </button>
-              </div>
-            </motion.div>
+                  <div className="p-6 flex flex-col flex-grow">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{tour.name}</h3>
+                    <p className="text-gray-600 text-sm mb-4 flex items-center gap-2">
+                      <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      {tour.location}
+                    </p>
 
-            {/* Card 2: GER-AUT-CZE */}
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
-            >
-              <div className="relative h-64">
-                <Image
-                  src="/tour-europe.jpg"
-                  alt="GER-AUT-CZE Tour"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">GER-AUT-CZE</h3>
-                <p className="text-gray-600 text-sm mb-4 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  ยุโรปกลาง
-                </p>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    9 วัน 7 คืน
-                  </div>
-                  <div className="text-orange-500 font-bold text-lg">
-                    เหลือ X ฿
-                  </div>
-                </div>
-                <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-full transition-colors duration-300 font-medium">
-                  ดูทัวร์
-                </button>
-              </div>
-            </motion.div>
+                    <div className="mt-auto">
+                      <div className="flex items-center justify-between mb-4 border-t border-gray-100 pt-4">
+                        <div className="flex items-center gap-2 text-gray-600 text-sm">
+                          <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {tour.duration}
+                        </div>
+                        <div className="text-orange-500 font-bold text-lg">
+                          ฿{tour.price.toLocaleString()}
+                        </div>
+                      </div>
 
-            {/* Card 3: Grand Italy */}
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
-            >
-              <div className="relative h-64">
-                <Image
-                  src="/tour-italy.jpg"
-                  alt="Grand Italy Tour"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Grand Italy</h3>
-                <p className="text-gray-600 text-sm mb-4 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  อิตาลี
-                </p>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2 text-gray-600 text-sm">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    8 วัน 6 คืน
+                      {tour.pdf?.url ? (
+                        <a
+                          href={tour.pdf.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block w-full"
+                        >
+                          <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-full transition-colors duration-300 font-medium cursor-pointer">
+                            ดูรายละเอียดทัวร์
+                          </button>
+                        </a>
+                      ) : (
+                        <Link href={`/tours/${tour._id}`} className="block w-full">
+                          <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-full transition-colors duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                            ดูรายละเอียดทัวร์
+                          </button>
+                        </Link>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-orange-500 font-bold text-lg">
-                    เหลือ X ฿
-                  </div>
-                </div>
-                <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-full transition-colors duration-300 font-medium">
-                  ดูทัวร์
-                </button>
-              </div>
-            </motion.div>
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
-      </section >
+      </section>
 
       {/* Aurora Section - The Masterpiece of Light */}
       < section className="relative h-screen w-screen left-[50%] right-[50%] -ml-[50vw] -mr-[50vw] overflow-hidden flex items-center" >

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { authAPI } from "@/services/api";
 
 export default function AdminLoginPage() {
     const router = useRouter();
@@ -17,17 +18,15 @@ export default function AdminLoginPage() {
         setIsLoading(true);
         setError("");
 
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        try {
+            // Call real API
+            const response = await authAPI.login({ username, password });
 
-        // Mock Authentication Logic
-        // In a real app, this should call an API endpoint
-        if (username === "admin" && password === "password") {
-            // Set cookie for middleware to verify
-            document.cookie = "admin_session=true; path=/; max-age=86400"; // Expires in 1 day
+            // Redirect to admin dashboard
             router.push("/admin");
-        } else {
-            setError("ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง");
+        } catch (err: any) {
+            console.error("Login error:", err);
+            setError(err.response?.data?.error || "ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง");
             setIsLoading(false);
         }
     };

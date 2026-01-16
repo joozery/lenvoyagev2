@@ -10,18 +10,18 @@ export function middleware(request: NextRequest) {
     // Define paths that are public (login page)
     const isPublicPath = path === '/admin/login';
 
-    // Get the session cookie
-    const adminSession = request.cookies.get('admin_session')?.value;
+    // Get the admin token cookie
+    const adminToken = request.cookies.get('admin_token')?.value;
 
     // 1. If trying to access a protected path (like /admin/dashboard) and NOT logged in
     //    Redirect to login page
-    if (isProtectedPath && !isPublicPath && !adminSession) {
+    if (isProtectedPath && !isPublicPath && !adminToken) {
         return NextResponse.redirect(new URL('/admin/login', request.url));
     }
 
     // 2. If trying to access login page AND ALREADY logged in
     //    Redirect to admin dashboard
-    if (isPublicPath && adminSession) {
+    if (isPublicPath && adminToken) {
         return NextResponse.redirect(new URL('/admin', request.url));
     }
 
