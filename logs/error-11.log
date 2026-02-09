@@ -1,0 +1,139 @@
+2026-01-16T23:50:42: ❌ MongoDB connection error: MongooseServerSelectionError: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/
+2026-01-16T23:50:42:     at async s (.next/server/chunks/[root-of-the-server]__a10acf45._.js:1:1711)
+2026-01-16T23:50:42:     at async b (.next/server/chunks/[root-of-the-server]__c84f8f29._.js:1:3143)
+2026-01-16T23:50:42:     at async u (.next/server/chunks/[root-of-the-server]__c84f8f29._.js:1:7024)
+2026-01-16T23:50:42:     at async l (.next/server/chunks/[root-of-the-server]__c84f8f29._.js:1:8065)
+2026-01-16T23:50:42:     at async Module.O (.next/server/chunks/[root-of-the-server]__c84f8f29._.js:1:9143) {
+2026-01-16T23:50:42:   errorLabelSet: Set(0) {},
+2026-01-16T23:50:42:   reason: [TopologyDescription],
+2026-01-16T23:50:42:   code: undefined,
+2026-01-16T23:50:42:   [cause]: [TopologyDescription]
+2026-01-16T23:50:42: }
+2026-01-16T23:50:42: Get tours error: MongooseServerSelectionError: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/
+2026-01-16T23:50:42:     at async s (.next/server/chunks/[root-of-the-server]__a10acf45._.js:1:1711)
+2026-01-16T23:50:42:     at async b (.next/server/chunks/[root-of-the-server]__c84f8f29._.js:1:3143)
+2026-01-16T23:50:42:     at async u (.next/server/chunks/[root-of-the-server]__c84f8f29._.js:1:7024)
+2026-01-16T23:50:42:     at async l (.next/server/chunks/[root-of-the-server]__c84f8f29._.js:1:8065)
+2026-01-16T23:50:42:     at async Module.O (.next/server/chunks/[root-of-the-server]__c84f8f29._.js:1:9143) {
+2026-01-16T23:50:42:   errorLabelSet: Set(0) {},
+2026-01-16T23:50:42:   reason: [TopologyDescription],
+2026-01-16T23:50:42:   code: undefined,
+2026-01-16T23:50:42:   [cause]: [TopologyDescription]
+2026-01-16T23:50:42: }
+2026-01-17T02:12:55: PDF fetch failed: 401 Unauthorized
+2026-01-17T02:13:02: PDF fetch failed: 401 Unauthorized
+2026-01-17T02:13:16: PDF fetch failed: 401 Unauthorized
+2026-01-17T02:13:24: PDF fetch failed: 401 Unauthorized
+2026-01-17T02:19:41: Error [InvariantError]: Invariant: The client reference manifest for route "/contact" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:41:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:41: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/contact" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:41:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:41: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/contact" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:41:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:41: ⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open '/srv/lenvoyagev2/.next/server/pages/500.html'
+2026-01-17T02:19:41:     at ignore-listed frames
+2026-01-17T02:19:41: Error [InvariantError]: Invariant: The client reference manifest for route "/about" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:41:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:41: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/about" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:41:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:41: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/about" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:41:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:41: ⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open '/srv/lenvoyagev2/.next/server/pages/500.html'
+2026-01-17T02:19:41:     at ignore-listed frames
+2026-01-17T02:19:41: Error [InvariantError]: Invariant: The client reference manifest for route "/gallery" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:41:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:41: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/gallery" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:41:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:41: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/gallery" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:41:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:41: ⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open '/srv/lenvoyagev2/.next/server/pages/500.html'
+2026-01-17T02:19:41:     at ignore-listed frames
+2026-01-17T02:19:41: Error [InvariantError]: Invariant: The client reference manifest for route "/tours" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:41:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:41: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/tours" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:41:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:41: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/tours" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:41:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:41: ⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open '/srv/lenvoyagev2/.next/server/pages/500.html'
+2026-01-17T02:19:41:     at ignore-listed frames
+2026-01-17T02:19:42: Error [InvariantError]: Invariant: The client reference manifest for route "/tours" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:42:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:42: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/tours" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:42:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:42: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/tours" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:42:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:42: ⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open '/srv/lenvoyagev2/.next/server/pages/500.html'
+2026-01-17T02:19:42:     at ignore-listed frames
+2026-01-17T02:19:42: Error [InvariantError]: Invariant: The client reference manifest for route "/tours" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:42:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:42: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/tours" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:42:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:42: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/tours" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:42:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:42: ⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open '/srv/lenvoyagev2/.next/server/pages/500.html'
+2026-01-17T02:19:42:     at ignore-listed frames
+2026-01-17T02:19:46: Error [InvariantError]: Invariant: The client reference manifest for route "/tours" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:46:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:46: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/tours" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:46:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:46: ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/tours" does not exist. This is a bug in Next.js.
+2026-01-17T02:19:46:     at Object.get (.next/server/chunks/ssr/_07720ad9._.js:1:12854)
+2026-01-17T02:19:46: ⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open '/srv/lenvoyagev2/.next/server/pages/500.html'
+2026-01-17T02:19:46:     at ignore-listed frames
+2026-01-17T02:22:53: ⨯ Error: Cannot find module '/srv/lenvoyagev2/.next/server/middleware-manifest.json'
+2026-01-17T02:22:53: Require stack:
+2026-01-17T02:22:53: - /srv/lenvoyagev2/node_modules/next/dist/server/next-server.js
+2026-01-17T02:22:53: - /srv/lenvoyagev2/node_modules/next/dist/server/next.js
+2026-01-17T02:22:53: - /srv/lenvoyagev2/node_modules/next/dist/server/lib/start-server.js
+2026-01-17T02:22:53: - /srv/lenvoyagev2/node_modules/next/dist/cli/next-start.js
+2026-01-17T02:22:53:     at ignore-listed frames {
+2026-01-17T02:22:53:   code: 'MODULE_NOT_FOUND',
+2026-01-17T02:22:53:   requireStack: [Array]
+2026-01-17T02:22:53: }
+2026-01-17T02:22:56: ⨯ Error: ENOENT: no such file or directory, open '/srv/lenvoyagev2/.next/required-server-files.json'
+2026-01-17T02:22:56:     at async Module.K (.next/server/chunks/ssr/_d20a669a._.js:1:1813) {
+2026-01-17T02:22:56:   errno: -2,
+2026-01-17T02:22:56:   code: 'ENOENT',
+2026-01-17T02:22:56:   syscall: 'open',
+2026-01-17T02:22:56:   path: '/srv/lenvoyagev2/.next/required-server-files.json'
+2026-01-17T02:22:56: }
+2026-01-17T02:22:56: ⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open '/srv/lenvoyagev2/.next/server/pages/500.html'
+2026-01-17T02:22:56:     at ignore-listed frames
+2026-01-17T02:28:09: ⨯ The requested resource isn't a valid image for https://res.cloudinary.com/dtbt6yj4m/video/upload/v1768591575/lensvoyage/mqmdymfbuhyao2txetri.mp4 received null
+2026-01-17T09:27:39: PDF fetch failed: 401 Unauthorized
+2026-01-17T09:28:27: PDF fetch failed: 401 Unauthorized
+2026-01-17T09:28:37: PDF fetch failed: 401 OK
+2026-01-17T18:19:43: Error: Failed to find Server Action "x". This request might be from an older or newer deployment.
+2026-01-17T18:19:43: Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
+2026-01-17T18:19:43:     at ignore-listed frames
+2026-01-18T01:52:10: PDF fetch failed: 401 Unauthorized
+2026-01-18T01:52:26: PDF fetch failed: 401 Unauthorized
+2026-01-30T13:45:29: Error: Failed to find Server Action "pMGZvZHXFWoJARcK". This request might be from an older or newer deployment.
+2026-01-30T13:45:29: Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
+2026-01-30T13:45:29:     at ignore-listed frames
+2026-01-30T15:28:02: PDF fetch failed: 401 OK
+2026-01-30T15:28:33: PDF fetch failed: 401 OK
+2026-01-30T15:29:41: PDF fetch failed: 401 Unauthorized
+2026-01-30T15:30:27: PDF fetch failed: 401 Unauthorized
+2026-01-30T19:46:06: PDF fetch failed: 401 Unauthorized
+2026-01-30T19:47:15: PDF fetch failed: 401 Unauthorized
+2026-01-30T19:47:54: PDF fetch failed: 401 Unauthorized
+2026-01-30T19:48:17: PDF fetch failed: 401 Unauthorized
+2026-01-30T19:51:54: PDF fetch failed: 401 OK
+2026-01-30T19:53:07: PDF fetch failed: 401 OK
+2026-01-30T19:55:31: PDF fetch failed: 401 Unauthorized
+2026-01-30T20:00:50: PDF fetch failed: 401 OK
+2026-02-06T21:13:06: PDF fetch failed: 401 OK
+2026-02-06T21:13:34: PDF fetch failed: 401 OK
+2026-02-06T21:13:43: PDF fetch failed: 401 OK
+2026-02-06T21:13:50: PDF fetch failed: 401 OK
+2026-02-06T21:14:50: PDF fetch failed: 401 Unauthorized
+2026-02-06T21:16:17: PDF fetch failed: 401 Unauthorized
+2026-02-07T19:03:00: PDF fetch failed: 401 OK
+2026-02-07T19:14:28: PDF fetch failed: 401 OK
+2026-02-07T19:47:41: PDF fetch failed: 401 OK
+2026-02-07T19:47:44: PDF fetch failed: 401 OK
+2026-02-07T20:20:42: Upload error: Error: Resolved credential object is not valid
+2026-02-07T20:20:42:     at ignore-listed frames {
+2026-02-07T20:20:42:   '$metadata': [Object]
+2026-02-07T20:20:42: }

@@ -82,8 +82,7 @@ export async function POST(request: NextRequest) {
         });
 
         // Return without password hash
-        const adminData = admin.toObject();
-        delete adminData.passwordHash;
+        const { passwordHash: _, ...adminData } = admin.toObject();
 
         return NextResponse.json(
             { success: true, data: adminData },

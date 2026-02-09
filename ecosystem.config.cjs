@@ -1,0 +1,60 @@
+module.exports = {
+  apps: [
+    {
+      name: 'lenvoyagev2',
+      script: 'npm',
+      args: 'start',
+      cwd: '/srv/lenvoyagev2',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3010,
+        HOSTNAME: '0.0.0.0',
+        MONGODB_URI: 'mongodb+srv://devwooyoujake_db_user:Xd5Oo68hCVYWH4Z7@lensvoyage.th52jz4.mongodb.net/?appName=lensvoyage',
+        MONGODB_DB_NAME: 'lensvoyage',
+        CLOUDINARY_CLOUD_NAME: 'dtbt6yj4m',
+        CLOUDINARY_API_KEY: '976843131969119',
+        CLOUDINARY_API_SECRET: 'USF8gy6kAsfZOaOgRtLKCg8rFII',
+        JWT_SECRET: 'lens-voyage-super-secret-jwt-key-2026-change-in-production',
+        R2_ACCOUNT_ID: 'fb2843be16e0ba27466664ef038015c0',
+        R2_ACCESS_KEY_ID: '06262c493a84b06fd132a8725277298f',
+        R2_SECRET_ACCESS_KEY: '663487631431ee845ec23bc5620ac01e36341b4f73747ad4ed2387ee0f162bb1',
+        R2_BUCKET_NAME: 'lenvoyage-pdfs',
+        R2_ENDPOINT: 'https://fb2843be16e0ba27466664ef038015c0.r2.cloudflarestorage.com',
+        ADMIN_USERNAME: 'admin',
+        ADMIN_PASSWORD: 'password',
+        NEXT_PUBLIC_API_URL: 'http://localhost:3000'
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        PORT: 3010,
+        HOSTNAME: '0.0.0.0',
+        MONGODB_URI: 'mongodb+srv://devwooyoujake_db_user:Xd5Oo68hCVYWH4Z7@lensvoyage.th52jz4.mongodb.net/?appName=lensvoyage',
+        MONGODB_DB_NAME: 'lensvoyage',
+        CLOUDINARY_CLOUD_NAME: 'dtbt6yj4m',
+        CLOUDINARY_API_KEY: '976843131969119',
+        CLOUDINARY_API_SECRET: 'USF8gy6kAsfZOaOgRtLKCg8rFII',
+        JWT_SECRET: 'lens-voyage-super-secret-jwt-key-2026-change-in-production',
+        R2_ACCOUNT_ID: 'fb2843be16e0ba27466664ef038015c0',
+        R2_ACCESS_KEY_ID: '06262c493a84b06fd132a8725277298f',
+        R2_SECRET_ACCESS_KEY: '663487631431ee845ec23bc5620ac01e36341b4f73747ad4ed2387ee0f162bb1',
+        R2_BUCKET_NAME: 'lenvoyage-pdfs',
+        R2_ENDPOINT: 'https://fb2843be16e0ba27466664ef038015c0.r2.cloudflarestorage.com',
+        ADMIN_USERNAME: 'admin',
+        ADMIN_PASSWORD: 'password',
+        NEXT_PUBLIC_API_URL: 'http://localhost:3000'
+      },
+      error_file: './logs/error.log',
+      out_file: './logs/out.log',
+      log_file: './logs/combined.log',
+      time: true,
+      watch: false,
+      ignore_watch: ['node_modules', 'logs', '.next'],
+      max_memory_restart: '1G',
+      restart_delay: 4000,
+      max_restarts: 10,
+      min_uptime: '10s'
+    }
+  ]
+};

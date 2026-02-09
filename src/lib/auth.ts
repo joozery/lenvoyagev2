@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { NextRequest } from 'next/server';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-this';
+const JWT_SECRET: string = process.env.JWT_SECRET || 'fallback-secret-change-this';
 
 /**
  * Generate JWT token
@@ -10,8 +10,9 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-this';
  * @param expiresIn - Token expiration time
  * @returns JWT token string
  */
-export function generateToken(payload: object, expiresIn: string = '7d'): string {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn });
+export function generateToken(payload: object, expiresIn: string | number = '7d'): string {
+    const options = { expiresIn };
+    return jwt.sign(payload, JWT_SECRET, options as SignOptions);
 }
 
 /**

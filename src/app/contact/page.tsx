@@ -16,12 +16,29 @@ export default function ContactPage() {
     const [selectedCountry, setSelectedCountry] = useState("");
     const [selectedMonth, setSelectedMonth] = useState("");
     const [selectedYear, setSelectedYear] = useState("");
+    const [tours, setTours] = useState<any[]>([]);
 
     // State for dropdown visibility
     const [openDropdown, setOpenDropdown] = useState<"country" | "month" | "year" | null>(null);
 
-    // Mock Data
-    const countries = ["Norway", "Iceland", "Japan", "New Zealand", "Vietnam", "China", "Georgia"];
+    useEffect(() => {
+        const fetchTours = async () => {
+            try {
+                const res = await fetch('/api/tours');
+                const data = await res.json();
+                if (data.success) {
+                    setTours(data.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch tours:', error);
+            }
+        };
+        fetchTours();
+    }, []);
+
+    // Derived Data from actual tours
+    const countries = Array.from(new Set(tours.map(t => t.location))).filter(Boolean).sort();
+
     const months = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"

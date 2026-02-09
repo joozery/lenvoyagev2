@@ -2,13 +2,37 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { galleryAPI, GalleryItem } from "@/services/api";
 
 export default function GalleryPage() {
     const scrollRef = useRef<HTMLDivElement>(null);
+    const [galleryImages, setGalleryImages] = useState<GalleryItem[]>([]);
+    const [galleryVideos, setGalleryVideos] = useState<GalleryItem[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        fetchGallery();
+    }, []);
+
+    const fetchGallery = async () => {
+        try {
+            setIsLoading(true);
+            // Fetch only visible items (public API)
+            const allImages = await galleryAPI.getAll('image', false);
+            const allVideos = await galleryAPI.getAll('video', false);
+            // Filter by isVisible on client side (or modify API to support filtering)
+            setGalleryImages(allImages.filter(img => img.isVisible));
+            setGalleryVideos(allVideos.filter(vid => vid.isVisible));
+        } catch (error) {
+            console.error('Failed to fetch gallery:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const scroll = (direction: 'left' | 'right') => {
         if (scrollRef.current) {
@@ -122,24 +146,30 @@ export default function GalleryPage() {
                         ref={scrollRef}
                         className="flex gap-4 overflow-x-auto no-scrollbar scroll-smooth"
                     >
-                        {[...Array(8)].map((_, index) => (
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, y: 50 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: 0.1 * index }}
-                                className="flex-shrink-0 relative w-64 h-40 md:w-80 md:h-52 bg-gray-200 rounded-lg overflow-hidden cursor-pointer hover:opacity-100 transition-opacity opacity-90 border border-white/10"
-                            >
-                                <Image
-                                    src={`/gallery-${index % 2 === 0 ? 'lavender' : 'beach'}.jpg`}
-                                    alt={`Gallery thumbnail ${index + 1}`}
-                                    fill
-                                    sizes="320px"
-                                    className="object-cover hover:scale-105 transition-transform duration-500"
-                                />
-                            </motion.div>
-                        ))}
+                        {isLoading ? (
+                            <div className="text-white px-8">กำลังโหลด...</div>
+                        ) : galleryImages.length === 0 ? (
+                            <div className="text-white/70 px-8">ยังไม่มีรูปภาพ</div>
+                        ) : (
+                            galleryImages.map((img, index) => (
+                                <motion.div
+                                    key={img._id}
+                                    initial={{ opacity: 0, y: 50 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.5, delay: 0.1 * index }}
+                                    className="flex-shrink-0 relative w-64 h-40 md:w-80 md:h-52 bg-gray-200 rounded-lg overflow-hidden cursor-pointer hover:opacity-100 transition-opacity opacity-90 border border-white/10"
+                                >
+                                    <Image
+                                        src={img.imageUrl}
+                                        alt={img.title || `Gallery image ${index + 1}`}
+                                        fill
+                                        sizes="320px"
+                                        className="object-cover hover:scale-105 transition-transform duration-500"
+                                    />
+                                </motion.div>
+                            ))
+                        )}
                     </div>
                 </div>
             </section>
@@ -171,37 +201,31 @@ export default function GalleryPage() {
                     </motion.h2>
 
                     <div className="flex flex-col md:flex-row gap-6 md:gap-8 lg:gap-12">
-                        {/* Video Card 1 */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.2 }}
-                            className="w-full md:w-[400px] aspect-video bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center group cursor-pointer hover:bg-white/30 transition-all duration-300"
-                        >
-                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-white/80 flex items-center justify-center group-hover:scale-110 group-hover:bg-white/10 transition-all duration-300">
-                                <svg className="w-6 h-6 md:w-8 md:h-8 text-white ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                        </motion.div>
-
-                        {/* Video Card 2 */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            whileInView={{ opacity: 1, scale: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.4 }}
-                            className="w-full md:w-[400px] aspect-video bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center group cursor-pointer hover:bg-white/30 transition-all duration-300"
-                        >
-                            <div className="w-20 h-20 rounded-full border-2 border-white/80 flex items-center justify-center group-hover:scale-110 group-hover:bg-white/10 transition-all duration-300">
-                                <svg className="w-8 h-8 text-white ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                        </motion.div>
+                        {isLoading ? (
+                            <div className="text-white">กำลังโหลด...</div>
+                        ) : galleryVideos.length === 0 ? (
+                            <div className="text-white/70">ยังไม่มีวิดีโอ</div>
+                        ) : (
+                            galleryVideos.slice(0, 2).map((video, index) => (
+                                <motion.div
+                                    key={video._id}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    whileInView={{ opacity: 1, scale: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.5, delay: 0.2 * (index + 1) }}
+                                    className="w-full md:w-[400px] aspect-video bg-white/20 backdrop-blur-md border border-white/30 rounded-lg overflow-hidden group cursor-pointer hover:bg-white/30 transition-all duration-300 relative"
+                                >
+                                    <video
+                                        src={video.imageUrl}
+                                        controls
+                                        className="w-full h-full object-cover"
+                                        poster={video.imageUrl} // Use video URL as poster/thumbnail
+                                    >
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </motion.div>
+                            ))
+                        )}
                     </div>
                 </div>
             </section>

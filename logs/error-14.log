@@ -1,0 +1,21 @@
+2026-02-07T20:22:23: Upload error: AccessDenied: Access Denied
+2026-02-07T20:22:23:     at ignore-listed frames {
+2026-02-07T20:22:23:   '$fault': 'client',
+2026-02-07T20:22:23:   '$retryable': undefined,
+2026-02-07T20:22:23:   '$metadata': [Object],
+2026-02-07T20:22:23:   Code: 'AccessDenied'
+2026-02-07T20:22:23: }
+2026-02-07T20:25:03: Upload error: AccessDenied: Access Denied
+2026-02-07T20:25:03:     at ignore-listed frames {
+2026-02-07T20:25:03:   '$fault': 'client',
+2026-02-07T20:25:03:   '$retryable': undefined,
+2026-02-07T20:25:03:   '$metadata': [Object],
+2026-02-07T20:25:03:   Code: 'AccessDenied'
+2026-02-07T20:25:03: }
+2026-02-07T23:09:02: Upload error: AccessDenied: Access Denied
+2026-02-07T23:09:02:     at ignore-listed frames {
+2026-02-07T23:09:02:   '$fault': 'client',
+2026-02-07T23:09:02:   '$retryable': undefined,
+2026-02-07T23:09:02:   '$metadata': [Object],
+2026-02-07T23:09:02:   Code: 'AccessDenied'
+2026-02-07T23:09:02: }

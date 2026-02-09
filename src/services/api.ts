@@ -37,7 +37,89 @@ export const authAPI = {
 // ==================== Upload API ====================
 
 export const uploadAPI = {
-    uploadFile: async (file: File, type: 'image' | 'pdf'): Promise<{ url: string; publicId: string }> => {
+    // Direct upload to Cloudinary (bypasses Next.js body size limit)
+    uploadFile: async (file: File, type: 'image' | 'pdf' | 'video' = 'image'): Promise<{ url: string; publicId: string }> => {
+        // Special case for PDF: Save to local server to bypass Cloudinary 10MB raw file limit
+        if (type === 'pdf') {
+            console.log('PDF detected, using Cloudflare R2 storage to bypass Cloudinary 10MB limit');
+            return uploadAPI.uploadFileViaAPI(file, 'pdf');
+        }
+
+        try {
+            // Get upload signature from our API
+            const signatureResponse = await apiClient.post('/api/upload-signature', {
+                folder: 'lensvoyage',
+                resourceType: type === 'video' ? 'video' : 'image',
+            });
+
+            const { timestamp, signature, apiKey, cloudName, folder, resourceType } = signatureResponse.data;
+
+            // Prepare form data for direct Cloudinary upload
+            // Order matters: append in the same order as signature generation (alphabetically)
+            const uploadFormData = new FormData();
+            uploadFormData.append('file', file);
+            uploadFormData.append('api_key', apiKey);
+            uploadFormData.append('timestamp', timestamp.toString());
+            uploadFormData.append('signature', signature);
+            uploadFormData.append('access_mode', 'public'); // Alphabetical order
+            uploadFormData.append('folder', folder);
+            uploadFormData.append('resource_type', resourceType);
+            // Upload directly to Cloudinary
+            // Cloudinary API endpoint format: /v1_1/{cloud_name}/{resource_type}/upload
+            const uploadEndpoint = resourceType === 'video' ? 'video' : 'image';
+            const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${uploadEndpoint}/upload`;
+
+            const uploadResponse = await fetch(uploadUrl, {
+                method: 'POST',
+                body: uploadFormData,
+            });
+
+            if (!uploadResponse.ok) {
+                const errorText = await uploadResponse.text();
+                let errorMessage = `Cloudinary upload failed: ${uploadResponse.status}`;
+                try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.error?.message || errorData.error || errorText;
+                } catch {
+                    errorMessage = errorText || errorMessage;
+                }
+                console.error('Cloudinary upload error:', {
+                    status: uploadResponse.status,
+                    statusText: uploadResponse.statusText,
+                    error: errorText,
+                    url: uploadUrl,
+                    resourceType,
+                    type
+                });
+                throw new Error(errorMessage);
+            }
+
+            const uploadData = await uploadResponse.json();
+
+            // For videos, Cloudinary might return different response structure
+            const url = uploadData.secure_url || uploadData.url;
+            const publicId = uploadData.public_id;
+
+            if (!url || !publicId) {
+                throw new Error('Invalid response from Cloudinary: missing URL or public_id');
+            }
+
+            return {
+                url,
+                publicId,
+            };
+        } catch (error: any) {
+            console.error('Direct upload error:', {
+                type,
+                error: error.message || error,
+                stack: error.stack
+            });
+            throw error;
+        }
+    },
+
+    // Fallback: Upload via Next.js API (for smaller files)
+    uploadFileViaAPI: async (file: File, type: 'image' | 'pdf'): Promise<{ url: string; publicId: string }> => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('type', type);
@@ -174,5 +256,102 @@ export const adminsAPI = {
 
     delete: async (id: string): Promise<void> => {
         await apiClient.delete(`/api/admins/${id}`);
+    },
+};
+
+// ==================== Gallery APIs ====================
+
+export interface GalleryItem {
+    _id?: string;
+    title?: string;
+    description?: string;
+    imageUrl: string;
+    publicId: string;
+    type: 'image' | 'video';
+    category?: string;
+    isVisible: boolean;
+    order: number;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export const galleryAPI = {
+    getAll: async (type?: 'image' | 'video', includeInvisible?: boolean): Promise<GalleryItem[]> => {
+        const params = new URLSearchParams();
+        if (type) params.set('type', type);
+        if (includeInvisible) params.set('includeInvisible', 'true');
+        const query = params.toString();
+        const response = await apiClient.get(`/api/gallery${query ? `?${query}` : ''}`);
+        return response.data.data;
+    },
+
+    getById: async (id: string): Promise<GalleryItem> => {
+        const response = await apiClient.get(`/api/gallery/${id}`);
+        return response.data.data;
+    },
+
+    create: async (item: Partial<GalleryItem>): Promise<GalleryItem> => {
+        const response = await apiClient.post('/api/gallery', item);
+        return response.data.data;
+    },
+
+    update: async (id: string, item: Partial<GalleryItem>): Promise<GalleryItem> => {
+        const response = await apiClient.put(`/api/gallery/${id}`, item);
+        return response.data.data;
+    },
+
+    delete: async (id: string): Promise<void> => {
+        await apiClient.delete(`/api/gallery/${id}`);
+    },
+};
+
+// ==================== Teams APIs ====================
+
+export interface TeamMember {
+    _id?: string;
+    name: string;
+    role: string;
+    bio?: string;
+    avatar?: {
+        url: string;
+        publicId: string;
+    };
+    email?: string;
+    socialLinks?: {
+        instagram?: string;
+        facebook?: string;
+        twitter?: string;
+        linkedin?: string;
+    };
+    order: number;
+    isVisible: boolean;
+}
+
+export const teamsAPI = {
+    getAll: async (includeInvisible: boolean = false): Promise<TeamMember[]> => {
+        const params = new URLSearchParams();
+        if (includeInvisible) params.set('includeInvisible', 'true');
+        const query = params.toString();
+        const response = await apiClient.get(`/api/teams${query ? `?${query}` : ''}`);
+        return response.data.data;
+    },
+
+    getById: async (id: string): Promise<TeamMember> => {
+        const response = await apiClient.get(`/api/teams/${id}`);
+        return response.data.data;
+    },
+
+    create: async (member: Partial<TeamMember>): Promise<TeamMember> => {
+        const response = await apiClient.post('/api/teams', member);
+        return response.data.data;
+    },
+
+    update: async (id: string, member: Partial<TeamMember>): Promise<TeamMember> => {
+        const response = await apiClient.put(`/api/teams/${id}`, member);
+        return response.data.data;
+    },
+
+    delete: async (id: string): Promise<void> => {
+        await apiClient.delete(`/api/teams/${id}`);
     },
 };

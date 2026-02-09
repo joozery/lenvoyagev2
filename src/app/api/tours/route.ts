@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Tour from '@/models/Tour';
 import { verifyRequest } from '@/lib/auth';
+import { fixAuthenticatedPDFUrl } from '@/lib/cloudinary';
 
 // GET all tours
 export async function GET() {
@@ -10,8 +11,20 @@ export async function GET() {
 
         const tours = await Tour.find({}).sort({ createdAt: -1 });
 
+        // Fix authenticated PDF URLs (regenerate signed URLs for expired ones)
+        const toursWithFreshUrls = tours.map((tour: any) => {
+            const tourObj = tour.toObject();
+            if (tourObj.pdf?.url && tourObj.pdf?.publicId) {
+                const fixedUrl = fixAuthenticatedPDFUrl(tourObj.pdf.url, tourObj.pdf.publicId);
+                if (fixedUrl) {
+                    tourObj.pdf.url = fixedUrl;
+                }
+            }
+            return tourObj;
+        });
+
         return NextResponse.json(
-            { success: true, data: tours },
+            { success: true, data: toursWithFreshUrls },
             { status: 200 }
         );
     } catch (error) {

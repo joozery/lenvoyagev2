@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { partnersAPI, Partner } from "@/services/api";
 
 interface Tour {
   _id: string;
@@ -19,11 +20,14 @@ interface Tour {
   };
   pdf?: {
     url: string;
+    publicId?: string;
   };
 }
 
 export default function Home() {
   const [tours, setTours] = useState<Tour[]>([]);
+  const [partners, setPartners] = useState<Partner[]>([]);
+  const [showPartnersSection, setShowPartnersSection] = useState(false);
 
   useEffect(() => {
     const fetchTours = async () => {
@@ -38,7 +42,22 @@ export default function Home() {
       }
     };
 
+    const fetchPartners = async () => {
+      try {
+        const data = await partnersAPI.getAll();
+        // Filter only visible partners
+        const visiblePartners = data.filter((p: Partner) => p.isVisible);
+        setPartners(visiblePartners);
+        // Show section only if there are visible partners
+        setShowPartnersSection(visiblePartners.length > 0);
+      } catch (error) {
+        console.error('Failed to fetch partners:', error);
+        setShowPartnersSection(false);
+      }
+    };
+
     fetchTours();
+    fetchPartners();
   }, []);
 
   return (
@@ -331,7 +350,7 @@ export default function Home() {
 
                       {tour.pdf?.url ? (
                         <a
-                          href={tour.pdf.url}
+                          href={`/api/view-pdf?url=${encodeURIComponent(tour.pdf.url)}${tour.pdf?.publicId ? `&publicId=${encodeURIComponent(tour.pdf.publicId)}` : ''}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="block w-full"
@@ -410,46 +429,58 @@ export default function Home() {
         </div >
       </section >
 
-      {/* Partners Section */}
-      < section className="relative w-full py-20 bg-white" >
-        <div className="max-w-7xl mx-auto px-8 md:px-16">
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-12 text-center"
-          >
-            Our Partners<span className="text-orange-500">.</span>
-          </motion.h2>
+      {/* Partners Section - Only show if there are visible partners */}
+      {showPartnersSection && partners.length > 0 && (
+        <section className="relative w-full py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-8 md:px-16">
+            <motion.h2
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-12 text-center"
+            >
+              Our Partners<span className="text-orange-500">.</span>
+            </motion.h2>
 
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="flex flex-nowrap overflow-x-auto pb-4 justify-start md:justify-center gap-6 md:gap-8 no-scrollbar"
-          >
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <motion.div
-                key={i}
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                className="shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-full bg-white shadow-lg flex items-center justify-center p-4 hover:shadow-xl transition-shadow duration-300 border border-gray-100"
-              >
-                <div className="relative w-full h-full">
-                  <Image
-                    src="/partner-logo.png"
-                    alt={`Partner ${i}`}
-                    fill
-                    sizes="(max-width: 768px) 96px, 128px"
-                    className="object-contain"
-                  />
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section >
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="flex flex-nowrap overflow-x-auto pb-4 justify-start md:justify-center gap-6 md:gap-8 no-scrollbar"
+            >
+              {partners.map((partner) => (
+                <motion.div
+                  key={partner._id}
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  className="shrink-0 w-20 h-20 md:w-28 md:h-28 rounded-full bg-white shadow-lg flex items-center justify-center p-4 hover:shadow-xl transition-shadow duration-300 border border-gray-100"
+                >
+                  {partner.logo?.url ? (
+                    <a
+                      href={partner.website || '#'}
+                      target={partner.website ? '_blank' : undefined}
+                      rel={partner.website ? 'noopener noreferrer' : undefined}
+                      className="relative w-full h-full"
+                      onClick={(e) => !partner.website && e.preventDefault()}
+                    >
+                      <Image
+                        src={partner.logo.url}
+                        alt={partner.name}
+                        fill
+                        sizes="(max-width: 768px) 96px, 128px"
+                        className="object-contain"
+                      />
+                    </a>
+                  ) : (
+                    <div className="text-xs text-gray-400 text-center">{partner.name}</div>
+                  )}
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* Gallery Section - Let Your Next Frame Be Here */}
       < section className="relative w-full py-20 bg-gray-100" >

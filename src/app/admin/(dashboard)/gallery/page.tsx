@@ -1,38 +1,42 @@
 "use client"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Upload, Image as ImageIcon, Trash2, Film, PlayCircle, X } from "lucide-react"
+import { galleryAPI, uploadAPI, GalleryItem } from "@/services/api"
 
 export default function GalleryPage() {
-    // 1. Initial State
-    const [images, setImages] = useState([
-        { id: 1, name: "gallery-beach.jpg", size: "1.2 MB", src: "/gallery-beach.jpg" },
-        { id: 2, name: "gallery-lavender.jpg", size: "2.4 MB", src: "/gallery-lavender.jpg" },
-        { id: 3, name: "tour-iceland.jpg", size: "3.1 MB", src: "/tour-iceland.jpg" },
-        { id: 4, name: "tour-japan.jpg", size: "1.8 MB", src: "/tour-japan.jpg" },
-        { id: 5, name: "header-bg.jpg", size: "4.5 MB", src: "/header-bg.jpg" }
-    ])
+    const [images, setImages] = useState<GalleryItem[]>([])
+    const [videos, setVideos] = useState<GalleryItem[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState("")
+    const [isUploading, setIsUploading] = useState(false)
+    const [selectedVideo, setSelectedVideo] = useState<GalleryItem | null>(null)
 
-    const [videos, setVideos] = useState([
-        { id: 1, name: "Iceland_Drone_Footage.mp4", duration: "02:45", size: "124 MB" },
-        { id: 2, name: "Customer_Testimonial.mp4", duration: "01:10", size: "45 MB" },
-        { id: 3, name: "Tour_Highlight_Japan.mp4", duration: "03:20", size: "201 MB" },
-    ])
-
-    // Refs
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    // 2. Handlers
-    const handleDeleteImage = (id: number) => {
-        if (confirm("คุณแน่ใจหรือไม่ที่จะลบรูปภาพนี้?")) {
-            setImages(images.filter(img => img.id !== id))
-        }
-    }
+    // Fetch gallery items on mount
+    useEffect(() => {
+        fetchGallery()
+    }, [])
 
-    const handleDeleteVideo = (id: number) => {
-        if (confirm("คุณแน่ใจหรือไม่ที่จะลบวิดีโอนี้?")) {
-            setVideos(videos.filter(v => v.id !== id))
+    const fetchGallery = async () => {
+        try {
+            setIsLoading(true)
+            setError("")
+
+            // Fetch all gallery items (admin can see invisible ones)
+            const allItems = await galleryAPI.getAll(undefined, true)
+            const imageItems = allItems.filter(item => item.type === 'image')
+            const videoItems = allItems.filter(item => item.type === 'video')
+
+            setImages(imageItems)
+            setVideos(videoItems)
+        } catch (err: any) {
+            console.error("Failed to fetch gallery:", err)
+            setError("ไม่สามารถโหลดข้อมูลคลังรูปภาพและวิดีโอได้")
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -40,62 +44,98 @@ export default function GalleryPage() {
         fileInputRef.current?.click()
     }
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
 
-        // Simulate Upload logic
-        const isVideo = file.type.startsWith('video/')
-        const newId = Date.now() // Simple ID generation
+        setIsUploading(true)
+        setError("")
 
-        if (isVideo) {
-            setVideos([...videos, {
-                id: newId,
-                name: file.name,
-                duration: "00:00", // Cannot get duration easily without reading file
-                size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`
-            }])
-            // Switch tab to videos if needed (optional)
-            alert(`อัปโหลดวิดีโอ "${file.name}" สำเร็จ!`)
-        } else {
-            // Create object URL for preview
-            const objectUrl = URL.createObjectURL(file)
-            setImages([...images, {
-                id: newId,
-                name: file.name,
-                size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-                src: objectUrl // Use local preview
-            }])
+        try {
+            const isVideo = file.type.startsWith('video/')
+            const fileType = isVideo ? 'video' : 'image'
+
+            // Upload directly to Cloudinary (bypasses Next.js body size limit)
+            const uploadData = await uploadAPI.uploadFile(file, fileType)
+
+            // Create gallery item
+            const galleryItem: Partial<GalleryItem> = {
+                title: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
+                imageUrl: uploadData.url,
+                publicId: uploadData.publicId,
+                type: isVideo ? 'video' : 'image',
+                isVisible: true,
+                order: isVideo ? videos.length : images.length,
+            }
+
+            await galleryAPI.create(galleryItem)
+
+            // Refresh gallery
+            await fetchGallery()
+        } catch (err: any) {
+            console.error("Failed to upload file:", err)
+            // Extract error message from various possible error formats
+            const errorMessage = err?.message || err?.response?.data?.error || err?.response?.data?.message || "ไม่สามารถอัปโหลดไฟล์ได้"
+            setError(errorMessage)
+            alert(`อัปโหลดไม่สำเร็จ: ${errorMessage}`)
+        } finally {
+            setIsUploading(false)
+            // Reset input
+            e.target.value = ""
         }
+    }
 
-        // Reset input
-        e.target.value = ""
+    const handleDelete = async (id: string, type: 'image' | 'video') => {
+        if (!confirm(`คุณแน่ใจหรือไม่ที่จะลบ${type === 'image' ? 'รูปภาพ' : 'วิดีโอ'}นี้?`)) return
+
+        try {
+            await galleryAPI.delete(id)
+            await fetchGallery()
+        } catch (err: any) {
+            console.error("Failed to delete:", err)
+            setError("ไม่สามารถลบไฟล์ได้")
+        }
+    }
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-20">
+                <p className="text-zinc-500">กำลังโหลด...</p>
+            </div>
+        )
     }
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-zinc-900">คลังรูปภาพและวิดีโอ</h2> {/* Media Library */}
+                    <h2 className="text-3xl font-bold tracking-tight text-zinc-900">คลังรูปภาพและวิดีโอ</h2>
                     <p className="text-zinc-500">จัดการไฟล์สื่อสำหรับแสดงบนเว็บไซต์ของคุณ</p>
                 </div>
 
-                {/* Hidden File Input */}
                 <input
                     type="file"
                     ref={fileInputRef}
                     className="hidden"
                     accept="image/*,video/*"
                     onChange={handleFileChange}
+                    disabled={isUploading}
                 />
 
                 <Button
                     onClick={handleUploadClick}
-                    className="bg-orange-500 hover:bg-orange-600 text-white gap-2 shadow-lg shadow-orange-500/20"
+                    disabled={isUploading}
+                    className="bg-orange-500 hover:bg-orange-600 text-white gap-2 shadow-lg shadow-orange-500/20 disabled:opacity-50"
                 >
-                    <Upload className="h-4 w-4" /> อัปโหลดใหม่
+                    <Upload className="h-4 w-4" /> {isUploading ? 'กำลังอัปโหลด...' : 'อัปโหลดใหม่'}
                 </Button>
             </div>
+
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg px-4 py-3">
+                    {error}
+                </div>
+            )}
 
             <Tabs defaultValue="images" className="w-full">
                 <div className="flex items-center justify-between mb-6">
@@ -126,13 +166,17 @@ export default function GalleryPage() {
                     ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                             {images.map((img) => (
-                                <div key={img.id} className="group relative aspect-square bg-white rounded-lg overflow-hidden border border-zinc-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-                                    {/* Image Preview (Use Object URL or fallback) */}
-                                    {img.src.startsWith('blob:') ? (
-                                        <img src={img.src} alt={img.name} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-zinc-100">
-                                            <ImageIcon className="h-10 w-10 text-zinc-300" />
+                                <div key={img._id} className="group relative aspect-square bg-white rounded-lg overflow-hidden border border-zinc-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                                    <img 
+                                        src={img.imageUrl} 
+                                        alt={img.title || 'Gallery image'} 
+                                        className="w-full h-full object-cover" 
+                                    />
+
+                                    {/* Visibility Badge */}
+                                    {!img.isVisible && (
+                                        <div className="absolute top-2 left-2 bg-zinc-600 text-white text-xs px-2 py-1 rounded">
+                                            ซ่อน
                                         </div>
                                     )}
 
@@ -144,7 +188,7 @@ export default function GalleryPage() {
                                             className="h-9 w-9 rounded-full shadow-lg hover:scale-110 transition-transform"
                                             onClick={(e) => {
                                                 e.stopPropagation()
-                                                handleDeleteImage(img.id)
+                                                handleDelete(img._id!, 'image')
                                             }}
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -153,8 +197,7 @@ export default function GalleryPage() {
 
                                     {/* Info Bar */}
                                     <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
-                                        <p className="text-xs text-white truncate font-medium">{img.name}</p>
-                                        <p className="text-[10px] text-zinc-300">{img.size}</p>
+                                        <p className="text-xs text-white truncate font-medium">{img.title || 'ไม่มีชื่อ'}</p>
                                     </div>
                                 </div>
                             ))}
@@ -174,13 +217,34 @@ export default function GalleryPage() {
                     ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             {videos.map((video) => (
-                                <div key={video.id} className="group relative aspect-video bg-zinc-900 rounded-lg overflow-hidden border border-zinc-200 shadow-sm cursor-pointer hover:shadow-lg transition-all">
-                                    {/* Mock Video Thumbnail */}
-                                    <div className="absolute inset-0 flex items-center justify-center bg-zinc-800">
-                                        <PlayCircle className="h-12 w-12 text-white/50 group-hover:text-orange-500 transition-colors" />
-                                    </div>
-                                    <div className="absolute top-2 right-2 bg-black/70 px-2 py-0.5 rounded text-xs text-white font-mono">
-                                        {video.duration}
+                                <div 
+                                    key={video._id} 
+                                    className="group relative aspect-video bg-zinc-900 rounded-lg overflow-hidden border border-zinc-200 shadow-sm cursor-pointer hover:shadow-lg transition-all"
+                                    onClick={() => setSelectedVideo(video)}
+                                >
+                                    {/* Video Thumbnail - Using imageUrl if available, otherwise placeholder */}
+                                    {video.imageUrl ? (
+                                        <img 
+                                            src={video.imageUrl} 
+                                            alt={video.title || 'Video'} 
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-zinc-800">
+                                            <PlayCircle className="h-12 w-12 text-white/50 group-hover:text-orange-500 transition-colors" />
+                                        </div>
+                                    )}
+
+                                    {/* Visibility Badge */}
+                                    {!video.isVisible && (
+                                        <div className="absolute top-2 left-2 bg-zinc-600 text-white text-xs px-2 py-1 rounded z-20">
+                                            ซ่อน
+                                        </div>
+                                    )}
+
+                                    {/* Play Icon Overlay */}
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                                        <PlayCircle className="h-16 w-16 text-white/70 group-hover:text-orange-500 transition-colors" />
                                     </div>
 
                                     {/* Hover Overlay */}
@@ -191,7 +255,7 @@ export default function GalleryPage() {
                                             className="h-9 w-9 rounded-full shadow-lg hover:scale-110 transition-transform"
                                             onClick={(e) => {
                                                 e.stopPropagation()
-                                                handleDeleteVideo(video.id)
+                                                handleDelete(video._id!, 'video')
                                             }}
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -199,8 +263,7 @@ export default function GalleryPage() {
                                     </div>
 
                                     <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
-                                        <p className="text-sm text-white truncate font-medium mb-0.5">{video.name}</p>
-                                        <p className="text-xs text-zinc-400">{video.size}</p>
+                                        <p className="text-sm text-white truncate font-medium mb-0.5">{video.title || 'ไม่มีชื่อ'}</p>
                                     </div>
                                 </div>
                             ))}
@@ -208,6 +271,36 @@ export default function GalleryPage() {
                     )}
                 </TabsContent>
             </Tabs>
+
+            {/* Video Preview Modal */}
+            {selectedVideo && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setSelectedVideo(null)}>
+                    <div className="relative w-full max-w-4xl mx-4" onClick={(e) => e.stopPropagation()}>
+                        <button
+                            onClick={() => setSelectedVideo(null)}
+                            className="absolute -top-12 right-0 text-white hover:text-orange-500 transition-colors z-10"
+                        >
+                            <X className="w-8 h-8" />
+                        </button>
+                        <div className="bg-zinc-900 rounded-lg overflow-hidden">
+                            <video
+                                src={selectedVideo.imageUrl}
+                                controls
+                                autoPlay
+                                className="w-full aspect-video"
+                            >
+                                Your browser does not support the video tag.
+                            </video>
+                            <div className="p-4">
+                                <h3 className="text-white text-lg font-semibold">{selectedVideo.title || 'Video'}</h3>
+                                {selectedVideo.description && (
+                                    <p className="text-zinc-400 text-sm mt-2">{selectedVideo.description}</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

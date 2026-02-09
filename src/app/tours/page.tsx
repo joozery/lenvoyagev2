@@ -21,6 +21,7 @@ interface Tour {
     };
     pdf?: {
         url: string;
+        publicId?: string;
     };
 }
 
@@ -193,7 +194,7 @@ export default function AllTours() {
 
                                             {tour.pdf?.url ? (
                                                 <a
-                                                    href={tour.pdf.url}
+                                                    href={`/api/view-pdf?url=${encodeURIComponent(tour.pdf.url)}${tour.pdf?.publicId ? `&publicId=${encodeURIComponent(tour.pdf.publicId)}` : ''}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="block w-full"

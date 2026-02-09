@@ -30,6 +30,7 @@ export default function PartnersPage() {
     const [isSaving, setIsSaving] = useState(false)
     const [isSectionOpen, setIsSectionOpen] = useState(true)
     const [isVisibleOnWebsite, setIsVisibleOnWebsite] = useState(true)
+    const [isTogglingVisibility, setIsTogglingVisibility] = useState(false)
 
     // Fetch partners on mount
     useEffect(() => {
@@ -42,11 +43,39 @@ export default function PartnersPage() {
             const data = await partnersAPI.getAll()
             setPartners(data)
             setError("")
+            
+            // Set visibility based on partners (if all are invisible, toggle is off)
+            if (data.length > 0) {
+                const visibleCount = data.filter((p: Partner) => p.isVisible).length
+                setIsVisibleOnWebsite(visibleCount > 0)
+            }
         } catch (err: any) {
             console.error("Failed to fetch partners:", err)
             setError("ไม่สามารถโหลดข้อมูลพาร์ทเนอร์ได้")
         } finally {
             setIsLoading(false)
+        }
+    }
+
+    const handleToggleVisibility = async () => {
+        const newVisibility = !isVisibleOnWebsite
+        setIsTogglingVisibility(true)
+        setError("")
+
+        try {
+            // Update all partners visibility
+            const updatePromises = partners.map((partner) =>
+                partnersAPI.update(partner._id!, { isVisible: newVisibility })
+            )
+
+            await Promise.all(updatePromises)
+            setIsVisibleOnWebsite(newVisibility)
+            await fetchPartners() // Refresh to get updated data
+        } catch (err: any) {
+            console.error("Failed to update visibility:", err)
+            setError("ไม่สามารถอัพเดทการแสดงผลได้")
+        } finally {
+            setIsTogglingVisibility(false)
         }
     }
 
@@ -141,9 +170,10 @@ export default function PartnersPage() {
                         </div>
                     </div>
                     <button
-                        onClick={() => setIsVisibleOnWebsite(!isVisibleOnWebsite)}
+                        onClick={handleToggleVisibility}
+                        disabled={isTogglingVisibility || partners.length === 0}
                         className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${isVisibleOnWebsite ? 'bg-green-500' : 'bg-zinc-300'
-                            }`}
+                            } ${isTogglingVisibility || partners.length === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                         <span
                             className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${isVisibleOnWebsite ? 'translate-x-7' : 'translate-x-1'
@@ -263,11 +293,19 @@ export default function PartnersPage() {
                             </Button>
                         </div>
 
-                        <div className="w-24 h-24 rounded-full bg-white border border-zinc-100 shadow-sm flex items-center justify-center mb-4 p-4 group-hover:scale-105 transition-transform relative">
-                            <div className="flex flex-col items-center justify-center">
-                                <Handshake className="w-8 h-8 text-zinc-300 group-hover:text-orange-500 transition-colors" />
-                                <span className="text-[10px] text-zinc-400 mt-1">โลโก้</span>
-                            </div>
+                        <div className="w-24 h-24 rounded-full bg-white border border-zinc-100 shadow-sm flex items-center justify-center mb-4 p-4 group-hover:scale-105 transition-transform relative overflow-hidden">
+                            {partner.logo?.url ? (
+                                <img 
+                                    src={partner.logo.url} 
+                                    alt={partner.name}
+                                    className="w-full h-full object-contain"
+                                />
+                            ) : (
+                                <div className="flex flex-col items-center justify-center">
+                                    <Handshake className="w-8 h-8 text-zinc-300 group-hover:text-orange-500 transition-colors" />
+                                    <span className="text-[10px] text-zinc-400 mt-1">โลโก้</span>
+                                </div>
+                            )}
                         </div>
 
                         <h3 className="font-semibold text-zinc-900 truncate w-full text-sm">{partner.name}</h3>

@@ -73,6 +73,7 @@ export default function ToursPage() {
                 imageFile: file,
                 imagePreview: URL.createObjectURL(file)
             })
+            setError("");
         }
     }
 
@@ -80,6 +81,7 @@ export default function ToursPage() {
         const file = e.target.files?.[0]
         if (file) {
             setNewTour({ ...newTour, pdfFile: file })
+            setError("");
         }
     }
 
@@ -245,6 +247,11 @@ export default function ToursPage() {
                         </DialogHeader>
 
                         <div className="space-y-6 py-4">
+                            {error && (
+                                <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm font-medium">
+                                    {error}
+                                </div>
+                            )}
                             {/* Basic Info Section */}
                             <div className="space-y-4">
                                 <h3 className="text-sm font-semibold text-zinc-700 uppercase tracking-wide">ข้อมูลพื้นฐาน</h3>
@@ -406,7 +413,7 @@ export default function ToursPage() {
                                                 </p>
                                                 {newTour.pdfPreview && !newTour.pdfFile && (
                                                     <a
-                                                        href={newTour.pdfPreview}
+                                                        href={`/api/view-pdf?url=${encodeURIComponent(newTour.pdfPreview)}${isEditing && currentTourId ? `&publicId=${encodeURIComponent(tours.find(t => t._id === currentTourId)?.pdf?.publicId || '')}` : ''}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="text-xs text-blue-600 hover:underline"

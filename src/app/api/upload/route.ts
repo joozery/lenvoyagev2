@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { uploadImage, uploadPDF } from '@/lib/cloudinary';
+import { uploadImage } from '@/lib/cloudinary';
+import cloudinary from '@/lib/cloudinary';
 import { verifyRequest } from '@/lib/auth';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import r2Client from '@/lib/r2';
+
+// Increase body size limit for this route (max 100MB has been set in next.config.ts)
+export const runtime = 'nodejs';
+export const maxDuration = 300; // 5 minutes timeout
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
     try {
@@ -24,18 +32,36 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Convert file to base64
-        const bytes = await file.arrayBuffer();
-        const buffer = Buffer.from(bytes);
-        const base64 = `data:${file.type};base64,${buffer.toString('base64')}`;
-
         let result;
 
         if (type === 'pdf') {
-            // Upload PDF
-            result = await uploadPDF(base64);
+            // Upload PDF to Cloudflare R2 to bypass Cloudinary limits
+            const arrayBuffer = await file.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+
+            const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+
+            const command = new PutObjectCommand({
+                Bucket: process.env.R2_BUCKET_NAME,
+                Key: `pdfs/${fileName}`,
+                Body: buffer,
+                ContentType: 'application/pdf',
+            });
+
+            await r2Client.send(command);
+
+            // Generate the R2 URL (using the proxy route for consistency and access control)
+            const r2Url = `https://${process.env.R2_BUCKET_NAME}.${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/pdfs/${fileName}`;
+
+            result = {
+                url: r2Url,
+                publicId: `r2-pdfs/${fileName}`,
+            };
         } else {
-            // Upload image
+            // Upload image using base64
+            const bytes = await file.arrayBuffer();
+            const buffer = Buffer.from(bytes);
+            const base64 = `data:${file.type};base64,${buffer.toString('base64')}`;
             result = await uploadImage(base64);
         }
 

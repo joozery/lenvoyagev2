@@ -43,32 +43,78 @@ export async function uploadImage(file: string, folder: string = 'lensvoyage') {
  */
 export async function uploadPDF(file: string, folder: string = 'lensvoyage/pdfs') {
     try {
-        // Upload PDF as authenticated raw file
-        // This solves the 401 Unauthorized issue on new Cloudinary accounts
+        // Upload PDF as public raw file - use public access mode explicitly
         const result = await cloudinary.uploader.upload(file, {
             folder,
             resource_type: 'raw',
-            type: 'authenticated', // Mark as authenticated
-            format: 'pdf',
+            // Force public access - remove any authentication requirements
+            type: 'upload', // Use 'upload' type instead of 'authenticated'
+            access_mode: 'public',
+            use_filename: true,
+            unique_filename: true,
         });
 
-        // Generate Signed URL for access
-        const signedUrl = cloudinary.url(result.public_id, {
-            resource_type: 'raw',
-            type: 'authenticated',
-            sign_url: true,
-            secure: true,
-            version: result.version // Add version explicitly
-        });
+        // Ensure we return secure HTTPS URL
+        const pdfUrl = result.secure_url || result.url;
+
+        if (!pdfUrl) {
+            throw new Error('Failed to get PDF URL from Cloudinary');
+        }
 
         return {
-            url: signedUrl, // Return Signed URL instead of direct URL
+            url: pdfUrl,
             publicId: result.public_id,
         };
     } catch (error) {
         console.error('Cloudinary PDF upload error:', error);
         throw new Error('Failed to upload PDF');
     }
+}
+
+/**
+ * Generate signed URL for PDF
+ * @param publicId - Cloudinary public_id
+ * @param type - Cloudinary delivery type ('upload', 'authenticated', etc.)
+ * @returns Signed URL that won't expire immediately
+ */
+export function getSignedPDFUrl(publicId: string, type: string = 'upload'): string {
+    try {
+        // Generate fresh signed URL
+        const signedUrl = cloudinary.url(publicId, {
+            resource_type: 'raw',
+            type: type,
+            sign_url: true,
+            secure: true,
+        });
+
+        return signedUrl;
+    } catch (error) {
+        console.error('Cloudinary signed URL generation error:', error);
+        throw new Error('Failed to generate signed URL');
+    }
+}
+
+/**
+ * Check if PDF URL is authenticated type and regenerate if needed
+ * @param pdfUrl - PDF URL to check
+ * @param publicId - Cloudinary public_id
+ * @returns Updated PDF URL (regenerated if authenticated)
+ */
+export function fixAuthenticatedPDFUrl(pdfUrl: string | undefined, publicId: string | undefined): string | undefined {
+    if (!pdfUrl || !publicId) return pdfUrl;
+
+    // Check if URL contains '/authenticated/' which means it's authenticated type
+    if (pdfUrl.includes('/authenticated/')) {
+        try {
+            // Generate fresh signed URL for authenticated resource
+            return getSignedPDFUrl(publicId, 'authenticated');
+        } catch (error) {
+            console.error('Error regenerating PDF URL:', error);
+            return pdfUrl; // Return original if error
+        }
+    }
+
+    return pdfUrl; // Return as-is if not authenticated
 }
 
 /**
