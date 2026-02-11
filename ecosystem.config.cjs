@@ -24,7 +24,7 @@ module.exports = {
         R2_ENDPOINT: 'https://fb2843be16e0ba27466664ef038015c0.r2.cloudflarestorage.com',
         ADMIN_USERNAME: 'admin',
         ADMIN_PASSWORD: 'password',
-        NEXT_PUBLIC_API_URL: 'http://localhost:3000'
+        NEXT_PUBLIC_API_URL: 'https://api.lensvoyage.net'
       },
       env_production: {
         NODE_ENV: 'production',
@@ -43,7 +43,7 @@ module.exports = {
         R2_ENDPOINT: 'https://fb2843be16e0ba27466664ef038015c0.r2.cloudflarestorage.com',
         ADMIN_USERNAME: 'admin',
         ADMIN_PASSWORD: 'password',
-        NEXT_PUBLIC_API_URL: 'http://localhost:3000'
+        NEXT_PUBLIC_API_URL: 'https://api.lensvoyage.net'
       },
       error_file: './logs/error.log',
       out_file: './logs/out.log',

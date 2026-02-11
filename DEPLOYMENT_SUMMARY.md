@@ -3,7 +3,7 @@
 ## 🚀 Deployment Information
 
 **Deployment Date:** January 15, 2026  
-**Domain:** https://lenvoyagev.devwooyou.space  
+**Domain:** https://lensvoyage.net  
 **Repository:** https://github.com/joozery/lenvoyagev2.git  
 **Server Location:** /srv/lenvoyagev2
 
@@ -36,10 +36,10 @@
 - **Logs Directory:** `/srv/lenvoyagev2/logs/`
 
 ### Nginx Configuration
-- **Config File:** `/etc/nginx/sites-available/lenvoyagev.devwooyou.space`
+- **Config File:** `/etc/nginx/sites-available/lensvoyage.net`
 - **Enabled:** Yes (symlinked to sites-enabled)
 - **SSL:** Enabled (Auto-redirect HTTP to HTTPS)
-- **Certificate:** `/etc/letsencrypt/live/lenvoyagev.devwooyou.space/`
+- **Certificate:** `/etc/letsencrypt/live/lensvoyage.net/`
 - **Certificate Expiry:** April 15, 2026 (auto-renewal enabled)
 
 ## 📁 Project Structure
@@ -157,8 +157,8 @@ pm2 restart lenvoyagev2
 - **Combined Log:** `/srv/lenvoyagev2/logs/combined-7.log`
 
 ### Nginx Logs
-- **Access Log:** `/var/log/nginx/lenvoyagev.devwooyou.space-access.log`
-- **Error Log:** `/var/log/nginx/lenvoyagev.devwooyou.space-error.log`
+- **Access Log:** `/var/log/nginx/lensvoyage.net-access.log`
+- **Error Log:** `/var/log/nginx/lensvoyage.net-error.log`
 
 ### PM2 Monitoring
 ```bash
@@ -177,5 +177,5 @@ pm2 monit                   # Real-time monitoring
 ✅ Auto-restart enabled  
 ✅ Logs configured  
 
-**Website URL:** https://lenvoyagev.devwooyou.space  
+**Website URL:** https://lensvoyage.net  
 **Status:** 🟢 Online and Running
