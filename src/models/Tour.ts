@@ -6,6 +6,8 @@ export interface ITour extends Document {
     price: number;
     duration: string;
     tourDate: string;
+    startDate?: Date;
+    endDate?: Date;
     seatsAvailable: number;
     status: 'เปิดขาย' | 'เร็วๆนี้' | 'ร่าง';
     image: {
@@ -44,6 +46,12 @@ const TourSchema: Schema = new Schema(
         tourDate: {
             type: String,
             required: [true, 'Tour date is required'],
+        },
+        startDate: {
+            type: Date,
+        },
+        endDate: {
+            type: Date,
         },
         seatsAvailable: {
             type: Number,

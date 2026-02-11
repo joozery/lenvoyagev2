@@ -14,6 +14,8 @@ interface Tour {
     price: number;
     duration: string;
     tourDate: string;
+    startDate?: string;
+    endDate?: string;
     seatsAvailable: number;
     status: string;
     image: {
@@ -24,6 +26,137 @@ interface Tour {
         publicId?: string;
     };
 }
+
+const TourCard = ({ programTours }: { programTours: Tour[] }) => {
+    // Sort tours by date if possible, otherwise use original order
+    const sortedTours = [...programTours].sort((a, b) => {
+        if (!a.startDate || !b.startDate) return 0;
+        return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+    });
+
+    const [selectedTour, setSelectedTour] = useState(sortedTours[0]);
+
+    const handleDateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const tourId = e.target.value;
+        const tour = sortedTours.find(t => t._id === tourId);
+        if (tour) setSelectedTour(tour);
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-gray-100 flex flex-col h-full"
+        >
+            {/* Card Image */}
+            <div className="relative h-60 w-full overflow-hidden">
+                <Image
+                    src={selectedTour.image?.url || "/placeholder-tour.jpg"}
+                    alt={selectedTour.name}
+                    fill
+                    className="object-cover hover:scale-110 transition-transform duration-700"
+                />
+                {/* Status Badge */}
+                {selectedTour.status === "เร็วๆนี้" && (
+                    <div className="absolute top-4 right-4 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md z-10">
+                        Coming Soon
+                    </div>
+                )}
+                {selectedTour.status === "เต็มแล้ว" && (
+                    <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md z-10">
+                        Sold Out
+                    </div>
+                )}
+            </div>
+
+            {/* Card Content */}
+            <div className="p-6 flex-grow flex flex-col justify-between">
+                <div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 line-clamp-2 min-h-[56px]">
+                        {selectedTour.name}
+                    </h3>
+
+                    {/* Date Selector Dropdown if multiple dates */}
+                    <div className="flex flex-col gap-2 mb-6">
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">วันเดินทาง</label>
+                        {sortedTours.length > 1 ? (
+                            <div className="relative">
+                                <select
+                                    value={selectedTour._id}
+                                    onChange={handleDateChange}
+                                    className="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl px-4 py-2.5 appearance-none focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all cursor-pointer font-medium"
+                                >
+                                    {sortedTours.map((t) => (
+                                        <option key={t._id} value={t._id}>
+                                            {t.tourDate} {t.status === 'เต็มแล้ว' ? '(เต็ม)' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <span className="bg-gray-100 p-1.5 rounded-md">
+                                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                </span>
+                                <span className="text-gray-600 text-sm font-medium bg-gray-100 px-3 py-1 rounded-md">{selectedTour.tourDate}</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Details: Duration & Location */}
+                    <div className="space-y-2 mb-6 text-sm text-gray-600">
+                        <div className="flex items-center gap-3">
+                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <span>{selectedTour.duration}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            <span>{selectedTour.location}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Price & Seats */}
+                <div className="space-y-4">
+                    <div className="flex items-end justify-between border-t border-gray-100 pt-4">
+                        <div className="text-red-500 font-bold text-2xl">
+                            ฿{selectedTour.price.toLocaleString()}
+                        </div>
+                        <div className={`text-sm font-medium ${selectedTour.status === 'เต็มแล้ว' ? 'text-red-500' : 'text-green-600'}`}>
+                            {selectedTour.status === 'เต็มแล้ว' ? 'เต็ม' : `รับ ${selectedTour.seatsAvailable} ท่าน`}
+                        </div>
+                    </div>
+
+                    {selectedTour.pdf?.url ? (
+                        <a
+                            href={`/api/view-pdf?url=${encodeURIComponent(selectedTour.pdf.url)}${selectedTour.pdf?.publicId ? `&publicId=${encodeURIComponent(selectedTour.pdf.publicId)}` : ''}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block w-full"
+                        >
+                            <button className="w-full bg-[#ff4d00] hover:bg-[#e64500] text-white py-3 rounded-full transition-colors duration-300 font-medium flex items-center justify-center gap-2 cursor-pointer">
+                                ดูทริป
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                            </button>
+                        </a>
+                    ) : (
+                        <Link href={`/tours/${selectedTour._id}`} className="block w-full">
+                            <button className="w-full bg-[#ff4d00] hover:bg-[#e64500] text-white py-3 rounded-full transition-colors duration-300 font-medium flex items-center justify-center gap-2">
+                                ดูทริป
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                            </button>
+                        </Link>
+                    )}
+                </div>
+            </div>
+        </motion.div>
+    );
+};
 
 export default function AllTours() {
     const [tours, setTours] = useState<Tour[]>([]);
@@ -123,98 +256,16 @@ export default function AllTours() {
                                 ยังไม่มีทัวร์ที่เปิดให้บริการในขณะนี้
                             </div>
                         ) : (
-                            tours.filter(tour => tour.status !== 'ร่าง').map((tour) => (
-                                <motion.div
-                                    key={tour._id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.5 }}
-                                    className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-gray-100 flex flex-col h-full"
-                                >
-                                    {/* Card Image */}
-                                    <div className="relative h-60 w-full overflow-hidden">
-                                        <Image
-                                            src={tour.image?.url || "/placeholder-tour.jpg"}
-                                            alt={tour.name}
-                                            fill
-                                            className="object-cover hover:scale-110 transition-transform duration-700"
-                                        />
-                                        {/* Status Badge */}
-                                        {tour.status === "เร็วๆนี้" && (
-                                            <div className="absolute top-4 right-4 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md z-10">
-                                                Coming Soon
-                                            </div>
-                                        )}
-                                        {tour.status === "เต็มแล้ว" && (
-                                            <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md z-10">
-                                                Sold Out
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Card Content */}
-                                    <div className="p-6 flex-grow flex flex-col justify-between">
-                                        <div>
-                                            <h3 className="text-xl font-bold text-gray-900 mb-4 line-clamp-2 min-h-[56px]">
-                                                {tour.name}
-                                            </h3>
-
-                                            {/* Date */}
-                                            <div className="flex items-center gap-2 mb-6">
-                                                <span className="bg-gray-100 p-1.5 rounded-md">
-                                                    <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                                </span>
-                                                <span className="text-gray-600 text-sm font-medium bg-gray-100 px-3 py-1 rounded-md">{tour.tourDate}</span>
-                                            </div>
-
-                                            {/* Details: Duration & Location */}
-                                            <div className="space-y-2 mb-6 text-sm text-gray-600">
-                                                <div className="flex items-center gap-3">
-                                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                    <span>{tour.duration}</span>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                                    <span>{tour.location}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Price & Seats */}
-                                        <div className="space-y-4">
-                                            <div className="flex items-end justify-between border-t border-gray-100 pt-4">
-                                                <div className="text-red-500 font-bold text-2xl">
-                                                    ฿{tour.price.toLocaleString()}
-                                                </div>
-                                                <div className={`text-sm font-medium ${tour.status === 'เต็มแล้ว' ? 'text-red-500' : 'text-green-600'}`}>
-                                                    {tour.status === 'เต็มแล้ว' ? 'เต็ม' : `รับ ${tour.seatsAvailable} ท่าน`}
-                                                </div>
-                                            </div>
-
-                                            {tour.pdf?.url ? (
-                                                <a
-                                                    href={`/api/view-pdf?url=${encodeURIComponent(tour.pdf.url)}${tour.pdf?.publicId ? `&publicId=${encodeURIComponent(tour.pdf.publicId)}` : ''}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="block w-full"
-                                                >
-                                                    <button className="w-full bg-[#ff4d00] hover:bg-[#e64500] text-white py-3 rounded-full transition-colors duration-300 font-medium flex items-center justify-center gap-2 cursor-pointer">
-                                                        ดูทริป
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                                                    </button>
-                                                </a>
-                                            ) : (
-                                                <Link href={`/tours/${tour._id}`} className="block w-full">
-                                                    <button className="w-full bg-[#ff4d00] hover:bg-[#e64500] text-white py-3 rounded-full transition-colors duration-300 font-medium flex items-center justify-center gap-2">
-                                                        ดูทริป
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                                                    </button>
-                                                </Link>
-                                            )}
-                                        </div>
-                                    </div>
-                                </motion.div>
+                            Object.values(
+                                tours.filter(tour => tour.status !== 'ร่าง').reduce((acc, tour) => {
+                                    if (!acc[tour.name]) {
+                                        acc[tour.name] = [];
+                                    }
+                                    acc[tour.name].push(tour);
+                                    return acc;
+                                }, {} as Record<string, Tour[]>)
+                            ).map((programTours, index) => (
+                                <TourCard key={index} programTours={programTours} />
                             ))
                         )}
                     </div>

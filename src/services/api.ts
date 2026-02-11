@@ -143,6 +143,8 @@ export interface Tour {
     price: number;
     duration: string;
     tourDate: string;
+    startDate?: string;
+    endDate?: string;
     seatsAvailable: number;
     status: 'เปิดขาย' | 'เร็วๆนี้' | 'ร่าง';
     image: {

@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description: "เพื่อมองเห็นโลกในมุมของคุณและมีความหมาย ทุกการเดินทางถูกออกแบบมาเพื่อคุณโดยเฉพาะ",
 };
 
+import { FloatingContact } from "@/components/ui/FloatingContact";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,6 +30,7 @@ export default function RootLayout({
     <html lang="th" className={`${montserrat.variable} ${notoSansThai.variable}`}>
       <body className="antialiased" suppressHydrationWarning>
         {children}
+        <FloatingContact />
       </body>
     </html>
   );

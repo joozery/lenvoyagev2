@@ -63,7 +63,7 @@ export async function PUT(
 
         const { id } = await params;
         const body = await request.json();
-        const { name, location, price, duration, tourDate, seatsAvailable, status, image, pdf } = body;
+        const { name, location, price, duration, tourDate, startDate, endDate, seatsAvailable, status, image, pdf } = body;
 
         const tour = await Tour.findById(id);
 
@@ -80,6 +80,8 @@ export async function PUT(
         if (price !== undefined) tour.price = price;
         if (duration) tour.duration = duration;
         if (tourDate) tour.tourDate = tourDate;
+        if (startDate) tour.startDate = startDate;
+        if (endDate) tour.endDate = endDate;
         if (seatsAvailable !== undefined) tour.seatsAvailable = seatsAvailable;
         if (status) tour.status = status;
         if (image) tour.image = image;

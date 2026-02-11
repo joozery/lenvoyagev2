@@ -37,6 +37,8 @@ export default function ToursPage() {
         price: "",
         duration: "",
         tourDate: "",
+        startDate: "",
+        endDate: "",
         seatsAvailable: "",
         status: "ร่าง",
         imageFile: null as File | null,
@@ -44,6 +46,26 @@ export default function ToursPage() {
         imagePreview: "",
         pdfPreview: "",
     })
+
+    const thMonthsShort = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+    const formatDateRangeThai = (start: string, end: string) => {
+        if (!start || !end) return "";
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+
+        const startDay = startDate.getDate();
+        const startMonth = thMonthsShort[startDate.getMonth()];
+
+        const endDay = endDate.getDate();
+        const endMonth = thMonthsShort[endDate.getMonth()];
+
+        if (startMonth === endMonth) {
+            return `${startDay}-${endDay} ${startMonth}`;
+        } else {
+            return `${startDay} ${startMonth} - ${endDay} ${endMonth}`;
+        }
+    }
 
     // Fetch tours on mount
     useEffect(() => {
@@ -101,6 +123,8 @@ export default function ToursPage() {
             price: "",
             duration: "",
             tourDate: "",
+            startDate: "",
+            endDate: "",
             seatsAvailable: "",
             status: "ร่าง",
             imageFile: null,
@@ -122,6 +146,8 @@ export default function ToursPage() {
             price: tour.price.toString(),
             duration: tour.duration,
             tourDate: tour.tourDate,
+            startDate: tour.startDate ? new Date(tour.startDate).toISOString().split('T')[0] : "",
+            endDate: tour.endDate ? new Date(tour.endDate).toISOString().split('T')[0] : "",
             seatsAvailable: tour.seatsAvailable?.toString() || "",
             status: tour.status,
             imageFile: null, // Keep null, only update if new file selected
@@ -159,7 +185,9 @@ export default function ToursPage() {
                 location: newTour.location,
                 price: Number(newTour.price),
                 duration: newTour.duration,
-                tourDate: newTour.tourDate,
+                tourDate: newTour.tourDate || formatDateRangeThai(newTour.startDate, newTour.endDate),
+                startDate: newTour.startDate ? new Date(newTour.startDate) : undefined as any,
+                endDate: newTour.endDate ? new Date(newTour.endDate) : undefined as any,
                 seatsAvailable: Number(newTour.seatsAvailable) || 0,
                 status: newTour.status as any,
             }
@@ -300,7 +328,42 @@ export default function ToursPage() {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium text-zinc-700">วันที่ทัวร์ *</label>
+                                        <label className="text-sm font-medium text-zinc-700">วันไป *</label>
+                                        <Input
+                                            type="date"
+                                            value={newTour.startDate}
+                                            onChange={(e) => {
+                                                const start = e.target.value;
+                                                setNewTour({
+                                                    ...newTour,
+                                                    startDate: start,
+                                                    tourDate: formatDateRangeThai(start, newTour.endDate)
+                                                });
+                                            }}
+                                            className="h-11"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-zinc-700">วันกลับ *</label>
+                                        <Input
+                                            type="date"
+                                            value={newTour.endDate}
+                                            onChange={(e) => {
+                                                const end = e.target.value;
+                                                setNewTour({
+                                                    ...newTour,
+                                                    endDate: end,
+                                                    tourDate: formatDateRangeThai(newTour.startDate, end)
+                                                });
+                                            }}
+                                            className="h-11"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-zinc-700">สรุปวันที่ (Auto) *</label>
                                         <Input
                                             value={newTour.tourDate}
                                             onChange={(e) => setNewTour({ ...newTour, tourDate: e.target.value })}

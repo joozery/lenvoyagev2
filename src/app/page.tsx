@@ -14,6 +14,9 @@ interface Tour {
   location: string;
   price: number;
   duration: string;
+  tourDate: string;
+  startDate?: string;
+  endDate?: string;
   status: string;
   image: {
     url: string;
@@ -23,6 +26,122 @@ interface Tour {
     publicId?: string;
   };
 }
+
+const HomeTourCard = ({ programTours, index }: { programTours: Tour[], index: number }) => {
+  const sortedTours = [...programTours].sort((a, b) => {
+    if (!a.startDate || !b.startDate) return 0;
+    return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+  });
+
+  const [selectedTour, setSelectedTour] = useState(sortedTours[0]);
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const tourId = e.target.value;
+    const tour = sortedTours.find(t => t._id === tourId);
+    if (tour) setSelectedTour(tour);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full"
+    >
+      <div className="relative h-64">
+        <Image
+          src={selectedTour.image?.url || "/placeholder-tour.jpg"}
+          alt={selectedTour.name}
+          fill
+          sizes="(max-width: 768px) 100vw, 33vw"
+          className="object-cover"
+        />
+        {/* Status Badge */}
+        {selectedTour.status === "เร็วๆนี้" && (
+          <div className="absolute top-4 right-4 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md z-10">
+            Coming Soon
+          </div>
+        )}
+        {selectedTour.status === "เต็มแล้ว" && (
+          <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md z-10">
+            Sold Out
+          </div>
+        )}
+      </div>
+      <div className="p-6 flex flex-col flex-grow">
+        <h3 className="text-xl font-bold text-gray-900 mb-2">{selectedTour.name}</h3>
+
+        {/* Date Dropdown/Text replaces Location */}
+        <div className="mb-4">
+          {sortedTours.length > 1 ? (
+            <div className="relative">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <select
+                value={selectedTour._id}
+                onChange={handleDateChange}
+                className="w-full bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl pl-9 pr-10 py-2 appearance-none focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all cursor-pointer font-medium"
+              >
+                {sortedTours.map((t) => (
+                  <option key={t._id} value={t._id}>
+                    {t.tourDate} {t.status === 'เต็มแล้ว' ? '(เต็ม)' : ''}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-600 text-sm flex items-center gap-2 font-medium bg-gray-50 py-2 px-3 rounded-xl border border-gray-100">
+              <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {selectedTour.tourDate}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-auto">
+          <div className="flex items-center justify-between mb-4 border-t border-gray-100 pt-4">
+            <div className="flex items-center gap-2 text-gray-600 text-sm">
+              <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {selectedTour.duration}
+            </div>
+            <div className="text-orange-500 font-bold text-lg">
+              ฿{selectedTour.price.toLocaleString()}
+            </div>
+          </div>
+
+          {selectedTour.pdf?.url ? (
+            <a
+              href={`/api/view-pdf?url=${encodeURIComponent(selectedTour.pdf.url)}${selectedTour.pdf?.publicId ? `&publicId=${encodeURIComponent(selectedTour.pdf.publicId)}` : ''}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full"
+            >
+              <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-full transition-colors duration-300 font-medium cursor-pointer">
+                ดูรายละเอียดทัวร์
+              </button>
+            </a>
+          ) : (
+            <Link href={`/tours/${selectedTour._id}`} className="block w-full">
+              <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-full transition-colors duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                ดูรายละเอียดทัวร์
+              </button>
+            </Link>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 export default function Home() {
   const [tours, setTours] = useState<Tour[]>([]);
@@ -280,11 +399,11 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h2 className="text-6xl md:text-7xl lg:text-8xl font-bold text-gray-900 mb-4">
-              15 <span className="text-4xl md:text-5xl font-normal">ประเทศ</span>
+            <h2 className="text-5xl md:text-7xl lg:text-8xl font-bold text-gray-900 mb-4">
+              Our Trips<span className="text-orange-500">.</span>
             </h2>
-            <p className="text-gray-600 text-lg">
-              ที่พร้อมพาคุณไปพบกับความสุข
+            <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+              เลือกประสบการณ์การเดินทางที่ถูกออกแบบมาอย่างพิถีพิถัน คลิกเพื่อดูรายละเอียดทริป
             </p>
           </motion.div>
 
@@ -296,79 +415,16 @@ export default function Home() {
                 กำลังโหลดข้อมูลการเดินทาง...
               </div>
             ) : (
-              tours.filter(tour => tour.status !== 'ร่าง').map((tour, index) => (
-                <motion.div
-                  key={tour._id}
-                  initial={{ opacity: 0, y: 50 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full"
-                >
-                  <div className="relative h-64">
-                    <Image
-                      src={tour.image?.url || "/placeholder-tour.jpg"}
-                      alt={tour.name}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover"
-                    />
-                    {/* Status Badge */}
-                    {tour.status === "เร็วๆนี้" && (
-                      <div className="absolute top-4 right-4 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
-                        Coming Soon
-                      </div>
-                    )}
-                    {tour.status === "เต็มแล้ว" && (
-                      <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
-                        Sold Out
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-6 flex flex-col flex-grow">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{tour.name}</h3>
-                    <p className="text-gray-600 text-sm mb-4 flex items-center gap-2">
-                      <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      {tour.location}
-                    </p>
-
-                    <div className="mt-auto">
-                      <div className="flex items-center justify-between mb-4 border-t border-gray-100 pt-4">
-                        <div className="flex items-center gap-2 text-gray-600 text-sm">
-                          <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          {tour.duration}
-                        </div>
-                        <div className="text-orange-500 font-bold text-lg">
-                          ฿{tour.price.toLocaleString()}
-                        </div>
-                      </div>
-
-                      {tour.pdf?.url ? (
-                        <a
-                          href={`/api/view-pdf?url=${encodeURIComponent(tour.pdf.url)}${tour.pdf?.publicId ? `&publicId=${encodeURIComponent(tour.pdf.publicId)}` : ''}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block w-full"
-                        >
-                          <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-full transition-colors duration-300 font-medium cursor-pointer">
-                            ดูรายละเอียดทัวร์
-                          </button>
-                        </a>
-                      ) : (
-                        <Link href={`/tours/${tour._id}`} className="block w-full">
-                          <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-full transition-colors duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-                            ดูรายละเอียดทัวร์
-                          </button>
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
+              Object.values(
+                tours.filter(tour => tour.status !== 'ร่าง').reduce((acc, tour) => {
+                  if (!acc[tour.name]) {
+                    acc[tour.name] = [];
+                  }
+                  acc[tour.name].push(tour);
+                  return acc;
+                }, {} as Record<string, Tour[]>)
+              ).map((programTours, index) => (
+                <HomeTourCard key={index} programTours={programTours} index={index} />
               ))
             )}
           </div>
@@ -482,7 +538,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* Gallery Section - Let Your Next Frame Be Here */}
+      {/* Gallery Section - Let Your Next Frame Be Here
       < section className="relative w-full py-20 bg-gray-100" >
         <div className="max-w-7xl mx-auto px-8 md:px-16">
           <motion.h2
@@ -497,7 +553,6 @@ export default function Home() {
           </motion.h2>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Gallery Item 1 */}
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -520,7 +575,6 @@ export default function Home() {
               </p>
             </motion.div>
 
-            {/* Gallery Item 2 */}
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -543,7 +597,6 @@ export default function Home() {
               </p>
             </motion.div>
 
-            {/* Gallery Item 3 */}
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -567,7 +620,7 @@ export default function Home() {
             </motion.div>
           </div>
         </div>
-      </section >
+      </section > */}
 
       {/* Footer */}
       <Footer />
