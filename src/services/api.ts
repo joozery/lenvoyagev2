@@ -155,6 +155,8 @@ export interface Tour {
         url: string;
         publicId: string;
     };
+    tripDetails?: string;
+    dailyItinerary?: string;
 }
 
 export const toursAPI = {

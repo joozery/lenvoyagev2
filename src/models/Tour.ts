@@ -18,6 +18,8 @@ export interface ITour extends Document {
         url: string;
         publicId: string;
     };
+    tripDetails?: string;
+    dailyItinerary?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -77,6 +79,12 @@ const TourSchema: Schema = new Schema(
         pdf: {
             url: String,
             publicId: String,
+        },
+        tripDetails: {
+            type: String,
+        },
+        dailyItinerary: {
+            type: String,
         },
     },
     {

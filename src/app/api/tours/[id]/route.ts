@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
+import mongoose from 'mongoose';
 import Tour from '@/models/Tour';
 import { verifyRequest } from '@/lib/auth';
 import { deleteFile, fixAuthenticatedPDFUrl } from '@/lib/cloudinary';
@@ -13,7 +14,23 @@ export async function GET(
         await connectDB();
 
         const { id } = await params;
-        const tour = await Tour.findById(id);
+        let tour;
+
+        if (mongoose.Types.ObjectId.isValid(id)) {
+            tour = await Tour.findById(id);
+        }
+
+        if (!tour) {
+            // Decoding the URL parameter properly (it might be double encoded from browser to Next.js API)
+            const decodedName = decodeURIComponent(id);
+            // Try matching by exact name if not found by ObjectId
+            tour = await Tour.findOne({ name: decodedName });
+            
+            // If still not found, try double decoding just in case it was encoded twice (e.g. %2520 -> %20 -> ' ')
+            if (!tour && decodedName !== decodeURIComponent(decodedName)) {
+                 tour = await Tour.findOne({ name: decodeURIComponent(decodedName) });
+            }
+        }
 
         if (!tour) {
             return NextResponse.json(
@@ -63,7 +80,7 @@ export async function PUT(
 
         const { id } = await params;
         const body = await request.json();
-        const { name, location, price, duration, tourDate, startDate, endDate, seatsAvailable, status, image, pdf } = body;
+        const { name, location, price, duration, tourDate, startDate, endDate, seatsAvailable, status, image, pdf, tripDetails, dailyItinerary } = body;
 
         const tour = await Tour.findById(id);
 
@@ -86,6 +103,8 @@ export async function PUT(
         if (status) tour.status = status;
         if (image) tour.image = image;
         if (pdf) tour.pdf = pdf;
+        if (tripDetails !== undefined) tour.tripDetails = tripDetails;
+        if (dailyItinerary !== undefined) tour.dailyItinerary = dailyItinerary;
 
         await tour.save();
 

@@ -132,26 +132,26 @@ const TourCard = ({ programTours }: { programTours: Tour[] }) => {
                         </div>
                     </div>
 
-                    {selectedTour.pdf?.url ? (
-                        <a
-                            href={`/api/view-pdf?url=${encodeURIComponent(selectedTour.pdf.url)}${selectedTour.pdf?.publicId ? `&publicId=${encodeURIComponent(selectedTour.pdf.publicId)}` : ''}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block w-full"
-                        >
-                            <button className="w-full bg-[#ff4d00] hover:bg-[#e64500] text-white py-3 rounded-full transition-colors duration-300 font-medium flex items-center justify-center gap-2 cursor-pointer">
-                                ดูทริป
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                            </button>
-                        </a>
-                    ) : (
-                        <Link href={`/tours/${selectedTour._id}`} className="block w-full">
+                    <div className="flex flex-col gap-2 w-full">
+                        <Link href={`/tours/${encodeURIComponent(selectedTour.name)}`} className="block w-full">
                             <button className="w-full bg-[#ff4d00] hover:bg-[#e64500] text-white py-3 rounded-full transition-colors duration-300 font-medium flex items-center justify-center gap-2">
-                                ดูทริป
+                                ดูรายละเอียดทัวร์
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                             </button>
                         </Link>
-                    )}
+                        {selectedTour.pdf?.url && (
+                            <a
+                                href={`/api/view-pdf?url=${encodeURIComponent(selectedTour.pdf.url)}${selectedTour.pdf?.publicId ? `&publicId=${encodeURIComponent(selectedTour.pdf.publicId)}` : ''}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block w-full"
+                            >
+                                <button className="w-full bg-white hover:bg-orange-50 text-[#ff4d00] border-2 border-[#ff4d00] py-2.5 rounded-full transition-colors duration-300 font-medium flex items-center justify-center gap-2 cursor-pointer">
+                                    ดูโปรแกรม (PDF)
+                                </button>
+                            </a>
+                        )}
+                    </div>
                 </div>
             </div>
         </motion.div>

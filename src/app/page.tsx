@@ -119,24 +119,25 @@ const HomeTourCard = ({ programTours, index }: { programTours: Tour[], index: nu
             </div>
           </div>
 
-          {selectedTour.pdf?.url ? (
-            <a
-              href={`/api/view-pdf?url=${encodeURIComponent(selectedTour.pdf.url)}${selectedTour.pdf?.publicId ? `&publicId=${encodeURIComponent(selectedTour.pdf.publicId)}` : ''}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full"
-            >
-              <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-full transition-colors duration-300 font-medium cursor-pointer">
-                ดูรายละเอียดทัวร์
-              </button>
-            </a>
-          ) : (
-            <Link href={`/tours/${selectedTour._id}`} className="block w-full">
+          <div className="flex flex-col gap-2 w-full">
+            <Link href={`/tours/${encodeURIComponent(selectedTour.name)}`} className="block w-full">
               <button className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-full transition-colors duration-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                 ดูรายละเอียดทัวร์
               </button>
             </Link>
-          )}
+            {selectedTour.pdf?.url && (
+              <a
+                href={`/api/view-pdf?url=${encodeURIComponent(selectedTour.pdf.url)}${selectedTour.pdf?.publicId ? `&publicId=${encodeURIComponent(selectedTour.pdf.publicId)}` : ''}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full"
+              >
+                <button className="w-full bg-white hover:bg-orange-50 text-orange-500 border-2 border-orange-500 py-2.5 rounded-full transition-colors duration-300 font-medium cursor-pointer">
+                  ดูโปรแกรม (PDF)
+                </button>
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
