@@ -4,6 +4,9 @@ import Tour from '@/models/Tour';
 import { verifyRequest } from '@/lib/auth';
 import { fixAuthenticatedPDFUrl } from '@/lib/cloudinary';
 
+export const dynamic = 'force-dynamic';
+
+
 // GET all tours
 export async function GET() {
     try {

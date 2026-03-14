@@ -3,6 +3,8 @@ import connectDB from '@/lib/mongodb';
 import Settings from '@/models/Settings';
 import { verifyRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET settings
 export async function GET() {
     try {

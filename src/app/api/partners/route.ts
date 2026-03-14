@@ -3,6 +3,9 @@ import connectDB from '@/lib/mongodb';
 import Partner from '@/models/Partner';
 import { verifyRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
+
 // GET all partners
 export async function GET() {
     try {

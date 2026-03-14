@@ -38,24 +38,36 @@ export async function POST(request: NextRequest) {
             // Upload PDF to Cloudflare R2 to bypass Cloudinary limits
             const arrayBuffer = await file.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
-
             const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+            const key = `pdfs/${fileName}`;
 
             const command = new PutObjectCommand({
                 Bucket: process.env.R2_BUCKET_NAME,
-                Key: `pdfs/${fileName}`,
+                Key: key,
                 Body: buffer,
                 ContentType: 'application/pdf',
             });
 
             await r2Client.send(command);
 
-            // Generate the R2 URL (using the proxy route for consistency and access control)
-            const r2Url = `https://${process.env.R2_BUCKET_NAME}.${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/pdfs/${fileName}`;
+            // Generate the R2 URL
+            // Prefer R2_PUBLIC_DOMAIN if set (e.g., cdn.example.com)
+            // Otherwise fallback to the R2.dev URL format if public access is enabled on the bucket
+            let r2Url;
+            if (process.env.R2_PUBLIC_DOMAIN) {
+                r2Url = `${process.env.R2_PUBLIC_DOMAIN}/${key}`;
+            } else {
+                // Fallback: This might require the bucket to have public access enabled via r2.dev subdomain
+                // or be just a placeholder if they haven't set up a domain.
+                // Using the account-id.r2.cloudflarestorage.com is for S3 API, not public HTTP access usually.
+                // Let's try to construct a potentially valid public URL or keep the internal one if they handle it via proxy.
+                // But the user says "upload pdf not working", implying the URL returned isn't usable.
+                r2Url = `https://${process.env.R2_BUCKET_NAME}.${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${key}`;
+            }
 
             result = {
                 url: r2Url,
-                publicId: `r2-pdfs/${fileName}`,
+                publicId: key,
             };
         } else {
             // Upload image using base64

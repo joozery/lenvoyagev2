@@ -3,7 +3,10 @@ import connectDB from '@/lib/mongodb';
 import Team from '@/models/Team';
 import { verifyRequest } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET all teams
+
 export async function GET(request: NextRequest) {
     try {
         await connectDB();

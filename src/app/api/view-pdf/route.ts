@@ -19,28 +19,44 @@ export async function GET(request: NextRequest) {
         }
 
         // Handle R2 files (either by URL or publicId)
-        if (fileUrl.includes('r2.cloudflarestorage.com') || (publicId && publicId.startsWith('r2-pdfs/'))) {
+        if (
+            fileUrl.includes('r2.cloudflarestorage.com') ||
+            fileUrl.includes('r2.dev') ||
+            (publicId && (publicId.startsWith('r2-pdfs/') || publicId.startsWith('pdfs/')))
+        ) {
             try {
-                const key = publicId && publicId.startsWith('r2-pdfs/')
-                    ? publicId.replace('r2-pdfs/', 'pdfs/')
-                    : fileUrl.split('.com/')[1];
+                let key;
+                if (publicId && (publicId.startsWith('r2-pdfs/') || publicId.startsWith('pdfs/'))) {
+                    key = publicId.replace('r2-pdfs/', 'pdfs/');
+                } else if (fileUrl.includes('r2.cloudflarestorage.com')) {
+                    key = fileUrl.split('.com/')[1];
+                } else if (fileUrl.includes('r2.dev')) {
+                    key = fileUrl.split('r2.dev/')[1];
+                }
 
-                const command = new GetObjectCommand({
-                    Bucket: process.env.R2_BUCKET_NAME,
-                    Key: key,
-                });
+                // If we have a custom domain in env, we might need to handle that too, 
+                // but relying on publicId is safest if provided.
 
-                const { Body } = await r2Client.send(command);
-                if (Body) {
-                    const arrayBuffer = await Body.transformToByteArray();
-                    return new NextResponse(Buffer.from(arrayBuffer), {
-                        headers: {
-                            'Content-Type': 'application/pdf',
-                            'Content-Disposition': 'inline; filename="tour.pdf"',
-                            'Cache-Control': 'public, max-age=3600',
-                            'Access-Control-Allow-Origin': '*',
-                        },
+                if (key) {
+                    console.log('Fetching from R2 with key:', key);
+                    const command = new GetObjectCommand({
+                        Bucket: process.env.R2_BUCKET_NAME,
+                        Key: key,
                     });
+
+                    const { Body, ContentType } = await r2Client.send(command);
+                    if (Body) {
+                        // @ts-ignore - transformToByteArray exists in newer aws-sdk 
+                        const arrayBuffer = await Body.transformToByteArray();
+                        return new NextResponse(Buffer.from(arrayBuffer), {
+                            headers: {
+                                'Content-Type': ContentType || 'application/pdf',
+                                'Content-Disposition': 'inline; filename="tour.pdf"',
+                                'Cache-Control': 'public, max-age=3600',
+                                'Access-Control-Allow-Origin': '*',
+                            },
+                        });
+                    }
                 }
             } catch (r2Error) {
                 console.error('Error fetching from R2:', r2Error);
