@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         await connectDB();
 
         const body = await request.json();
-        const { name, location, price, duration, tourDate, startDate, endDate, seatsAvailable, status, image, pdf, tripDetails, dailyItinerary } = body;
+        const { name, location, price, duration, tourDate, startDate, endDate, seatsAvailable, status, image, pdf, tripDetails, dailyItinerary, faqs } = body;
 
         // Validation
         if (!name || !location || !price || !duration || !tourDate || !seatsAvailable || !image) {
@@ -78,7 +78,8 @@ export async function POST(request: NextRequest) {
             image,
             pdf,
             tripDetails,
-            dailyItinerary
+            dailyItinerary,
+            faqs
         });
 
         return NextResponse.json(

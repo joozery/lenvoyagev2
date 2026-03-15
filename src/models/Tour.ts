@@ -20,6 +20,7 @@ export interface ITour extends Document {
     };
     tripDetails?: string;
     dailyItinerary?: string;
+    faqs?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -86,6 +87,9 @@ const TourSchema: Schema = new Schema(
         dailyItinerary: {
             type: String,
         },
+        faqs: {
+            type: String,
+        },
     },
     {
         timestamps: true,
@@ -97,6 +101,10 @@ TourSchema.index({ status: 1, createdAt: -1 });
 TourSchema.index({ location: 1 });
 TourSchema.index({ tourDate: 1 });
 
-const Tour: Model<ITour> = mongoose.models.Tour || mongoose.model<ITour>('Tour', TourSchema);
+if (mongoose.models.Tour) {
+    delete mongoose.models.Tour;
+}
+
+const Tour: Model<ITour> = mongoose.model<ITour>('Tour', TourSchema);
 
 export default Tour;

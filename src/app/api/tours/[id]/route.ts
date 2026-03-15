@@ -80,7 +80,7 @@ export async function PUT(
 
         const { id } = await params;
         const body = await request.json();
-        const { name, location, price, duration, tourDate, startDate, endDate, seatsAvailable, status, image, pdf, tripDetails, dailyItinerary } = body;
+        const { name, location, price, duration, tourDate, startDate, endDate, seatsAvailable, status, image, pdf, tripDetails, dailyItinerary, faqs } = body;
 
         const tour = await Tour.findById(id);
 
@@ -105,6 +105,10 @@ export async function PUT(
         if (pdf) tour.pdf = pdf;
         if (tripDetails !== undefined) tour.tripDetails = tripDetails;
         if (dailyItinerary !== undefined) tour.dailyItinerary = dailyItinerary;
+        if (faqs !== undefined) tour.faqs = faqs;
+
+        console.log("==> PUT Endpoint faqs received:", faqs);
+        console.log("==> Tour doc faqs state before save:", tour.faqs);
 
         await tour.save();
 

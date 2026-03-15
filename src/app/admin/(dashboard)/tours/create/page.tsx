@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
-import { Plus, ArrowLeft, Image as ImageIcon, FileText, X } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Plus, ArrowLeft, Image as ImageIcon, FileText, X, Pencil } from "lucide-react"
 import { toursAPI, uploadAPI, Tour } from "@/services/api"
+import { ItineraryDayModal, ItineraryItemData } from "@/components/admin/ItineraryDayModal"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import Link from "next/link"
 
 const thMonthsShort = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
@@ -69,18 +72,52 @@ export default function CreateTourPage() {
         images?: ItineraryImage[];
     }
 
+    interface FAQItem {
+        question: string;
+        answer: string;
+    }
+
     const [dailyItineraryItems, setDailyItineraryItems] = useState<ItineraryItem[]>([{ day: 1, title: "", details: "" }])
+    const [faqItems, setFaqItems] = useState<FAQItem[]>([])
+
+    const openAddItineraryModal = () => {
+        setEditingItineraryDayIndex(null);
+        setIsItineraryModalOpen(true);
+    };
+
+    const openEditItineraryModal = (index: number) => {
+        setEditingItineraryDayIndex(index);
+        setIsItineraryModalOpen(true);
+    };
+
+    const handleSaveItineraryModal = (data: ItineraryItemData) => {
+        if (editingItineraryDayIndex !== null) {
+            const newItems = [...dailyItineraryItems];
+            newItems[editingItineraryDayIndex] = {
+                ...newItems[editingItineraryDayIndex],
+                day: data.day,
+                title: data.title,
+                details: data.details
+            };
+            setDailyItineraryItems(newItems);
+        } else {
+            setDailyItineraryItems([...dailyItineraryItems, {
+                day: data.day,
+                title: data.title,
+                details: data.details,
+                images: []
+            }]);
+        }
+        setIsItineraryModalOpen(false); // Close modal after saving
+    };
 
     const handleAddItineraryDay = () => {
-        setDailyItineraryItems([
-            ...dailyItineraryItems, 
-            { day: dailyItineraryItems.length + 1, title: "", details: "" }
-        ])
+        openAddItineraryModal();
     }
 
     const handleRemoveItineraryDay = (indexToRemove: number) => {
         if (dailyItineraryItems.length <= 1) return;
-        
+
         const newItems = dailyItineraryItems.filter((_, index) => index !== indexToRemove)
         // Re-index days
         const reindexedItems = newItems.map((item, index) => ({
@@ -90,21 +127,39 @@ export default function CreateTourPage() {
         setDailyItineraryItems(reindexedItems)
     }
 
-    const handleUpdateItineraryDay = (index: number, field: 'title' | 'details', value: string) => {
-        const newItems = [...dailyItineraryItems];
+    const handleAddFAQ = () => {
+        setFaqItems([...faqItems, { question: "", answer: "" }]);
+    };
+
+    const handleRemoveFAQ = (indexToRemove: number) => {
+        setFaqItems(faqItems.filter((_, index) => index !== indexToRemove));
+    };
+
+    const handleFAQChange = (index: number, field: 'question' | 'answer', value: string) => {
+        const newItems = [...faqItems];
         newItems[index] = { ...newItems[index], [field]: value };
-        setDailyItineraryItems(newItems);
-    }
+        setFaqItems(newItems);
+    };
+
+    // handleUpdateItineraryDay is no longer needed as editing is done via modal
+    // const handleUpdateItineraryDay = (index: number, field: 'title' | 'details', value: string) => {
+    //     const newItems = [...dailyItineraryItems];
+    //     newItems[index] = { ...newItems[index], [field]: value };
+    //     setDailyItineraryItems(newItems);
+    // }
+
+    const [isItineraryModalOpen, setIsItineraryModalOpen] = useState(false);
+    const [editingItineraryDayIndex, setEditingItineraryDayIndex] = useState<number | null>(null);
 
     const generateItineraryDays = (start: string, end: string) => {
         if (!start || !end) return;
         const startDate = new Date(start);
         const endDate = new Date(end);
-        
+
         // Calculate diff in days
         const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end days
-        
+
         if (diffDays > 0 && diffDays <= 30) { // Limit to 30 days max to prevent huge arrays
             const newItems = Array.from({ length: diffDays }, (_, i) => {
                 // Try to keep existing titles/details if possible
@@ -122,7 +177,7 @@ export default function CreateTourPage() {
     const handleAddItineraryImage = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
-        
+
         const newItems = [...dailyItineraryItems];
         if (!newItems[index].images) {
             newItems[index].images = [];
@@ -135,7 +190,7 @@ export default function CreateTourPage() {
                 preview: URL.createObjectURL(file)
             });
         });
-        
+
         setDailyItineraryItems(newItems);
         // Reset file input
         e.target.value = '';
@@ -256,6 +311,7 @@ export default function CreateTourPage() {
             // For now, these are UI ready.
             tourData.tripDetails = newTour.tripDetails;
             tourData.dailyItinerary = JSON.stringify(processedItineraryItems.filter(item => item.title || item.details || (item.images && item.images.length > 0)));
+            tourData.faqs = JSON.stringify(faqItems.filter(item => item.question && item.answer));
 
             await toursAPI.create(tourData)
             router.push("/admin/tours")
@@ -382,88 +438,167 @@ export default function CreateTourPage() {
                         <div className="bg-zinc-50 px-6 py-4 border-b border-zinc-200">
                             <h3 className="text-lg font-bold text-zinc-900">2. รายละเอียดเชิงลึก (Tour Details)</h3>
                         </div>
-                        <CardContent className="p-6 space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-zinc-700">รายละเอียดทริปโดยรวม (คำโฆษณา / ไฮไลท์)</label>
-                                <Textarea
-                                    value={newTour.tripDetails}
-                                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNewTour({ ...newTour, tripDetails: e.target.value })}
-                                    placeholder="เขียนแนะนำทริปนี้ว่ามีความน่าสนใจอย่างไร..."
-                                    className="min-h-[150px] resize-y"
-                                />
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-medium text-zinc-700">กำหนดการเดินทางรายวัน</label>
-                                    <Button type="button" variant="outline" size="sm" onClick={handleAddItineraryDay} className="h-8 gap-1.5 text-orange-600 border-orange-200 hover:bg-orange-50">
-                                        <Plus className="h-3.5 w-3.5" /> เพิ่มวัน
-                                    </Button>
+                        <CardContent className="p-0">
+                            <Tabs defaultValue="details" className="w-full">
+                                <div className="px-6 pt-4 border-b border-zinc-100">
+                                    <TabsList className="bg-zinc-100/50 p-1">
+                                        <TabsTrigger value="details" className="data-[state=active]:bg-white">รายละเอียดโดยรวม</TabsTrigger>
+                                        <TabsTrigger value="itinerary" className="data-[state=active]:bg-white">กำหนดการเดินทางรายวัน</TabsTrigger>
+                                        <TabsTrigger value="faq" className="data-[state=active]:bg-white">คำถามที่พบบ่อย (FAQ)</TabsTrigger>
+                                    </TabsList>
                                 </div>
-                                
-                                <div className="space-y-4">
-                                    {dailyItineraryItems.map((item, index) => (
-                                        <div key={`day-${index}`} className="p-4 border border-zinc-200 rounded-xl bg-white space-y-4 relative group">
-                                            {dailyItineraryItems.length > 1 && (
-                                                <button 
-                                                    type="button" 
-                                                    onClick={() => handleRemoveItineraryDay(index)}
-                                                    className="absolute top-3 right-3 p-1.5 text-zinc-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </button>
-                                            )}
-                                            
-                                            <div className="flex items-center gap-3 border-b border-zinc-100 pb-3">
-                                                <div className="bg-orange-100 text-orange-700 font-bold px-3 py-1 rounded-lg text-sm shrink-0">
-                                                    Day {item.day}
-                                                </div>
-                                                <Input
-                                                    value={item.title}
-                                                    onChange={(e) => handleUpdateItineraryDay(index, 'title', e.target.value)}
-                                                    placeholder="เช่น เดินทางถึงสนามบิน - เข้าที่พัก"
-                                                    className="h-10 border-transparent bg-transparent hover:bg-zinc-50 focus:bg-white px-2 focus:border-zinc-300 font-medium"
-                                                />
+
+                                <TabsContent value="details" className="p-6 m-0 border-none focus-visible:ring-0">
+                                    <div className="space-y-4">
+                                        <label className="text-sm font-medium text-zinc-700">รายละเอียดทริปโดยรวม (คำโฆษณา / ไฮไลท์)</label>
+                                        <RichTextEditor
+                                            content={newTour.tripDetails}
+                                            onChange={(content) => setNewTour({ ...newTour, tripDetails: content })}
+                                            placeholder="เขียนแนะนำทริปนี้ว่ามีความน่าสนใจอย่างไร..."
+                                        />
+                                    </div>
+                                </TabsContent>
+
+                                <TabsContent value="itinerary" className="p-6 m-0 border-none focus-visible:ring-0">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="space-y-1">
+                                                <h4 className="text-sm font-medium text-zinc-700">กำหนดการเดินทางรายวัน</h4>
+                                                <p className="text-xs text-zinc-500">สร้างและแก้ไขกำหนดการเดินทางแต่ละวัน (วันที่จะสร้างให้อัตโนมัติตามช่วงวันที่เลือกด้านบน)</p>
                                             </div>
-                                            
-                                            <Textarea
-                                                value={item.details}
-                                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleUpdateItineraryDay(index, 'details', e.target.value)}
-                                                placeholder={`รายละเอียดการเดินทางวันที่ ${item.day}...`}
-                                                className="min-h-[100px] bg-zinc-50/50 border-zinc-200 text-sm"
-                                            />
-                                            
-                                            <div className="pt-2">
-                                                <div className="flex flex-wrap gap-2 mb-2">
-                                                    {item.images && item.images.map((img, imgIndex) => (
-                                                        <div key={imgIndex} className="relative w-20 h-20 rounded-md overflow-hidden border border-zinc-200 group/img">
-                                                            <img src={img.preview || img.url} alt={`Day ${item.day} image`} className="w-full h-full object-cover" />
+                                            <Button type="button" variant="outline" size="sm" onClick={handleAddItineraryDay} className="h-8 gap-1.5 text-orange-600 border-orange-200 hover:bg-orange-50">
+                                                <Plus className="h-3.5 w-3.5" /> เพิ่มวัน
+                                            </Button>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            {dailyItineraryItems.map((item, index) => (
+                                                <div key={`day-${index}`} className="p-4 border border-zinc-200 rounded-xl bg-white space-y-4 relative group">
+                                                    <div className="absolute top-3 right-3 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openEditItineraryModal(index)}
+                                                            className="p-1.5 text-zinc-400 hover:text-orange-500 rounded-lg hover:bg-orange-50 transition-colors"
+                                                            title="แก้ไขวันเดินทาง"
+                                                        >
+                                                            <Pencil className="w-4 h-4" />
+                                                        </button>
+                                                        {dailyItineraryItems.length > 1 && (
                                                             <button
                                                                 type="button"
-                                                                onClick={() => handleRemoveItineraryImage(index, imgIndex)}
-                                                                className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity"
+                                                                onClick={() => handleRemoveItineraryDay(index)}
+                                                                className="p-1.5 text-zinc-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                                                                title="ลบวันเดินทาง"
                                                             >
-                                                                <X className="w-4 h-4 text-white" />
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center gap-3 border-b border-zinc-100 pb-3 pr-16">
+                                                        <div className="bg-orange-100 text-orange-700 font-bold px-3 py-1 rounded-lg text-sm shrink-0">
+                                                            Day {item.day}
+                                                        </div>
+                                                        <div className="font-medium text-zinc-900 truncate">
+                                                            {item.title || "ไม่ได้ระบุชื่อวัน"}
+                                                        </div>
+                                                    </div>
+
+                                                    <div
+                                                        className="min-h-[60px] text-sm text-zinc-600 prose prose-sm max-w-none"
+                                                        dangerouslySetInnerHTML={{ __html: item.details || "<p class='text-zinc-400 italic'>ไม่มีรายละเอียด</p>" }}
+                                                    />
+
+                                                    <div className="pt-2">
+                                                        <div className="flex flex-wrap gap-2 mb-2">
+                                                            {item.images && item.images.map((img, imgIndex) => (
+                                                                <div key={imgIndex} className="relative w-20 h-20 rounded-md overflow-hidden border border-zinc-200 group/img">
+                                                                    <img src={img.preview || img.url} alt={`Day ${item.day} image`} className="w-full h-full object-cover" />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleRemoveItineraryImage(index, imgIndex)}
+                                                                        className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity"
+                                                                    >
+                                                                        <X className="w-4 h-4 text-white" />
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+                                                            <label className="w-20 h-20 rounded-md border border-dashed border-zinc-300 flex flex-col items-center justify-center text-zinc-500 hover:bg-zinc-50 hover:text-orange-500 hover:border-orange-300 cursor-pointer transition-colors bg-white">
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    multiple
+                                                                    className="hidden"
+                                                                    onChange={(e) => handleAddItineraryImage(index, e)}
+                                                                />
+                                                                <Plus className="w-5 h-5 mb-1" />
+                                                                <span className="text-[10px] font-medium">เพิ่มรูป</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </TabsContent>
+
+                                <TabsContent value="faq" className="p-6 m-0 border-none focus-visible:ring-0">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="space-y-1">
+                                                <h4 className="text-sm font-medium text-zinc-700">คำถามที่พบบ่อย (FAQ)</h4>
+                                                <p className="text-xs text-zinc-500">เพิ่มคำถามและคำตอบที่ลูกค้ามักจะสอบถามบ่อยๆ สำหรับทริปนี้</p>
+                                            </div>
+                                            <Button type="button" variant="outline" size="sm" onClick={handleAddFAQ} className="h-8 gap-1.5 text-orange-600 border-orange-200 hover:bg-orange-50">
+                                                <Plus className="h-3.5 w-3.5" /> เพิ่มคำถาม
+                                            </Button>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            {faqItems.length === 0 ? (
+                                                <div className="text-center py-8 border border-dashed border-zinc-200 rounded-xl">
+                                                    <p className="text-zinc-400 text-sm">ยังไม่มีรายการคำถาม</p>
+                                                </div>
+                                            ) : (
+                                                faqItems.map((item, index) => (
+                                                    <div key={`faq-${index}`} className="p-4 border border-zinc-200 rounded-xl bg-white space-y-3 relative group">
+                                                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleRemoveFAQ(index)}
+                                                                className="p-1.5 text-zinc-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                                                                title="ลบรายการ"
+                                                            >
+                                                                <X className="w-4 h-4" />
                                                             </button>
                                                         </div>
-                                                    ))}
-                                                    <label className="w-20 h-20 rounded-md border border-dashed border-zinc-300 flex flex-col items-center justify-center text-zinc-500 hover:bg-zinc-50 hover:text-orange-500 hover:border-orange-300 cursor-pointer transition-colors bg-white">
-                                                        <input 
-                                                            type="file" 
-                                                            accept="image/*" 
-                                                            multiple
-                                                            className="hidden" 
-                                                            onChange={(e) => handleAddItineraryImage(index, e)}
-                                                        />
-                                                        <Plus className="w-5 h-5 mb-1" />
-                                                        <span className="text-[10px] font-medium">เพิ่มรูป</span>
-                                                    </label>
-                                                </div>
-                                            </div>
+
+                                                        <div className="space-y-2 pr-8">
+                                                            <label className="text-xs font-bold text-zinc-600">คำถามที่ {index + 1}</label>
+                                                            <Input
+                                                                value={item.question}
+                                                                onChange={(e) => handleFAQChange(index, 'question', e.target.value)}
+                                                                placeholder="เช่น อัตรานี้รวมตั๋วเครื่องบินไหม?"
+                                                                className="h-10 font-bold text-zinc-800"
+                                                            />
+                                                        </div>
+
+                                                        <div className="space-y-2">
+                                                            <label className="text-xs font-bold text-zinc-600">คำตอบ</label>
+                                                            <Textarea
+                                                                value={item.answer}
+                                                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFAQChange(index, 'answer', e.target.value)}
+                                                                placeholder="เขียนรายละเอียดคำตอบ..."
+                                                                className="min-h-[80px] resize-y text-sm"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )))
+                                            }
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
                         </CardContent>
                     </Card>
                 </div>
@@ -554,8 +689,8 @@ export default function CreateTourPage() {
                                 )}
                             </div>
 
-                            <Button 
-                                onClick={handleSaveTour} 
+                            <Button
+                                onClick={handleSaveTour}
                                 className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-bold text-lg rounded-xl shadow-lg shadow-orange-500/20 mt-6"
                                 disabled={isSaving}
                             >
@@ -565,6 +700,14 @@ export default function CreateTourPage() {
                     </Card>
                 </div>
             </div>
+
+            <ItineraryDayModal
+                isOpen={isItineraryModalOpen}
+                onClose={() => setIsItineraryModalOpen(false)}
+                onSave={handleSaveItineraryModal}
+                initialData={editingItineraryDayIndex !== null ? dailyItineraryItems[editingItineraryDayIndex] : null}
+                nextDayNumber={dailyItineraryItems.length > 0 ? Math.max(...dailyItineraryItems.map(d => d.day)) + 1 : 1}
+            />
         </div>
     )
 }

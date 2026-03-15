@@ -181,6 +181,16 @@ export default function ToursPage() {
                                         </td>
                                         <td className="p-6 align-middle text-right">
                                             <div className="flex items-center justify-end gap-2">
+                                                <Link href={`/tours/${encodeURIComponent(tour.name)}`} target="_blank">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100"
+                                                        title="ดูหน้าทัวร์"
+                                                    >
+                                                        <Search className="h-4 w-4" />
+                                                    </Button>
+                                                </Link>
                                                 <Link href={`/admin/tours/${tour._id}/edit`}>
                                                     <Button
                                                         variant="ghost"

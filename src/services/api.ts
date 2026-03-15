@@ -157,6 +157,7 @@ export interface Tour {
     };
     tripDetails?: string;
     dailyItinerary?: string;
+    faqs?: string;
 }
 
 export const toursAPI = {
